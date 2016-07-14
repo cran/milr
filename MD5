@@ -1,0 +1,17 @@
+f362f2e3fc6b1b70da5f2df4a2b56945 *DESCRIPTION
+a1fe38927fa7040812432f9d3ea56575 *LICENSE
+555d1081390020b755dc90343beaf1de *NAMESPACE
+0b7a608b64029e53942c8970bfee0818 *R/DGP.R
+9009b0b712573be344eda147d54b9e83 *R/RcppExports.R
+71c0f8cebdbaca69453a46c7aba1e41d *R/milr-package.R
+3858f626828eae53812978c8e01a6b06 *R/milr.R
+3833acd9966cdc7dcccfca97a558acb2 *R/softmax.R
+c8efc372c9541703819004412c4f3bc0 *man/DGP.Rd
+c941bb6a4393979a95a5392568f47855 *man/logit.Rd
+2d87c1dfcd30448ce164677ef9617850 *man/milr-package.Rd
+5f0205612b2efd3e240764892532bcdc *man/milr.Rd
+c907b08baef30a9bded231ab361be3c8 *man/softmax.Rd
+2a6f9e9e044a78154d3cfda5936d6f48 *src/Makevars
+2a6f9e9e044a78154d3cfda5936d6f48 *src/Makevars.win
+c32c87a1220b846e18e28517b1da2399 *src/RcppExports.cpp
+7f9ab3112c13ba27125501c4cf102bea *src/milr.cpp
