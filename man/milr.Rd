@@ -4,8 +4,8 @@
 \alias{milr}
 \title{Maximum likelihood estimation of multiple-instance logistic regression with LASSO penalty}
 \usage{
-milr(y, x, bag, lambda = 0, lambdaCriterion = "BIC", nfold = 10,
-  maxit = 500)
+milr(y, x, bag, lambda = 0, numLambda = 20L, lambdaCriterion = "BIC",
+  nfold = 10L, maxit = 500L)
 }
 \arguments{
 \item{y}{a vector. Bag-level binary labels.}
@@ -20,17 +20,29 @@ be chosen based on the optimality criterion, \code{lambdaCriterion}.
 Finally, if \code{lambda = -1}, then the optimal lambda value would be chosen automatically.
 The default is 0.}
 
+\item{numLambda}{An integer, the maximum length of LASSO-penalty. in atuo-tunning mode 
+(\code{lambda = -1}). The default is 20.}
+
 \item{lambdaCriterion}{a string, the used optimality criterion for tuning the \code{lambda} value.
 It can be specified with \code{lambdaCriterion = "BIC"} or \code{lambdaCriterion = "deviance"}.}
 
 \item{nfold}{an integer, the number of fold for cross-validation to choose the optimal \code{lambda} when
 \code{lambdaCriterion = "deviance"}.}
 
-\item{maxit}{an integer, the maximum iteration for the EM algorithm.}
+\item{maxit}{an integer, the maximum iteration for the EM algorithm. The default is 500.}
 }
 \value{
-a list including deviance (not cv deviance), BIC, chosen lambda, coefficients, 
- fitted values, log-likelihood and variances of coefficients.
+An object with S3 class "milr".
+\itemize{
+\item{lambda}{a vector of candidate lambda values.}
+\item{cv}{a vector of predictive deviance via \code{nfold}-fold cross validation
+ when \code{lambdaCriterion = "deviance"}.}
+\item{deviance}{a vector of deviance of candidate model for each candidate lambda value.}
+\item{BIC}{a vector of BIC of candidate model for each candidate lambda value.}
+\item{best_index}{an integer, indicates the index of the best model among candidate lambda values.}
+\item{best_model}{a list of the information for the best model including deviance (not cv deviance), 
+ BIC, chosen lambda, coefficients, fitted values, log-likelihood and variances of coefficients.}
+}
 }
 \description{
 Please refer to \link{milr-package}.
@@ -42,32 +54,26 @@ trainData <- DGP(70, 3, beta)
 testData <- DGP(30, 3, beta)
 # default (not use LASSO)
 milr_result <- milr(trainData$Z, trainData$X, trainData$ID)
-coef(milr_result)      # coefficients
-fitted(milr_result)    # fitted values
 summary(milr_result)   # summary milr
-predict(milr_result, testData$X, testData$ID) # predicted label
+coef(milr_result)      # coefficients
+fitted(milr_result)    # fitted bag labels
+fitted(milr_result, type = "instance")    # fitted instance labels
+predict(milr_result, testData$X, testData$ID) # predicted bag labels
+predict(milr_result, testData$X, testData$ID, type = "instance") # predicted instance labels
 
 # use BIC to choose penalty
 milr_result <- milr(trainData$Z, trainData$X, trainData$ID,
   exp(seq(log(0.01), log(50),length = 30)))
-coef(milr_result)      # coefficients
-fitted(milr_result)    # fitted values
 summary(milr_result)   # summary milr
-predict(milr_result, testData$X, testData$ID) # predicted label
+coef(milr_result)      # coefficients
 
 # use auto-tuning
 milr_result <- milr(trainData$Z, trainData$X, trainData$ID, lambda = -1)
 coef(milr_result)      # coefficients
-fitted(milr_result)    # fitted values
-summary(milr_result)   # summary milr
-predict(milr_result, testData$X, testData$ID) # predicted label
 
 # use cv in auto-tuning
 milr_result <- milr(trainData$Z, trainData$X, trainData$ID, 
                     lambda = -1, lambdaCriterion = "deviance")
 coef(milr_result)      # coefficients
-fitted(milr_result)    # fitted values
-summary(milr_result)   # summary milr
-predict(milr_result, testData$X, testData$ID) # predicted label
 }
 
