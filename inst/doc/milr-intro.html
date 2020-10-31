@@ -1,60 +1,174 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 
-<meta name="date" content="2017-06-08" />
+<meta name="date" content="2020-10-28" />
 
 <title>milr: Multiple-Instance Logistic Regression with Lasso Penalty</title>
 
+<script>// Hide empty <a> tag within highlighted CodeBlock for screen reader accessibility (see https://github.com/jgm/pandoc/issues/6352#issuecomment-626106786) -->
+// v0.0.1
+// Written by JooYoung Seo (jooyoung@psu.edu) and Atsushi Yasumoto on June 1st, 2020.
+
+document.addEventListener('DOMContentLoaded', function() {
+  const codeList = document.getElementsByClassName("sourceCode");
+  for (var i = 0; i < codeList.length; i++) {
+    var linkList = codeList[i].getElementsByTagName('a');
+    for (var j = 0; j < linkList.length; j++) {
+      if (linkList[j].innerHTML === "") {
+        linkList[j].setAttribute('aria-hidden', 'true');
+      }
+    }
+  }
+});
+</script>
+<style type="text/css">
+a.anchor-section {margin-left: 10px; visibility: hidden; color: inherit;}
+a.anchor-section::before {content: '#';}
+.hasAnchor:hover a.anchor-section {visibility: visible;}
+</style>
+<script>// Anchor sections v1.0 written by Atsushi Yasumoto on Oct 3rd, 2020.
+document.addEventListener('DOMContentLoaded', function() {
+  // Do nothing if AnchorJS is used
+  if (typeof window.anchors === 'object' && anchors.hasOwnProperty('hasAnchorJSLink')) {
+    return;
+  }
+
+  const h = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+
+  // Do nothing if sections are already anchored
+  if (Array.from(h).some(x => x.classList.contains('hasAnchor'))) {
+    return null;
+  }
+
+  // Use section id when pandoc runs with --section-divs
+  const section_id = function(x) {
+    return ((x.classList.contains('section') || (x.tagName === 'SECTION'))
+            ? x.id : '');
+  };
+
+  // Add anchors
+  h.forEach(function(x) {
+    const id = x.id || section_id(x.parentElement);
+    if (id === '') {
+      return null;
+    }
+    let anchor = document.createElement('a');
+    anchor.href = '#' + id;
+    anchor.classList = ['anchor-section'];
+    x.classList.add('hasAnchor');
+    x.appendChild(anchor);
+  });
+});
+</script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
 
 
 <style type="text/css">code{white-space: pre;}</style>
-<style type="text/css">
-div.sourceCode { overflow-x: auto; }
-table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
-  margin: 0; padding: 0; vertical-align: baseline; border: none; }
-table.sourceCode { width: 100%; line-height: 100%; }
-td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
-td.sourceCode { padding-left: 5px; }
-code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
-code > span.dt { color: #902000; } /* DataType */
-code > span.dv { color: #40a070; } /* DecVal */
-code > span.bn { color: #40a070; } /* BaseN */
-code > span.fl { color: #40a070; } /* Float */
-code > span.ch { color: #4070a0; } /* Char */
-code > span.st { color: #4070a0; } /* String */
-code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
-code > span.ot { color: #007020; } /* Other */
-code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
-code > span.fu { color: #06287e; } /* Function */
-code > span.er { color: #ff0000; font-weight: bold; } /* Error */
-code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
-code > span.cn { color: #880000; } /* Constant */
-code > span.sc { color: #4070a0; } /* SpecialChar */
-code > span.vs { color: #4070a0; } /* VerbatimString */
-code > span.ss { color: #bb6688; } /* SpecialString */
-code > span.im { } /* Import */
-code > span.va { color: #19177c; } /* Variable */
-code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
-code > span.op { color: #666666; } /* Operator */
-code > span.bu { } /* BuiltIn */
-code > span.ex { } /* Extension */
-code > span.pp { color: #bc7a00; } /* Preprocessor */
-code > span.at { color: #7d9029; } /* Attribute */
-code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
-code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
-code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
-code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+<style type="text/css" data-origin="pandoc">
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+
 </style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
 
 <style type="text/css">
   p.abstract{
@@ -68,7 +182,10 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 </style>
 
 
-<link href="data:text/css;charset=utf-8,%0Abody%20%7B%0Amargin%3A%200%20auto%3B%0Abackground%2Dcolor%3A%20white%3B%0A%0A%2F%20font%2Dfamily%3AGeorgia%2C%20Palatino%2C%20serif%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Book%20Antiqua%22%2C%20Palatino%2C%20serif%3B%0A%2F%20font%2Dfamily%3AArial%2C%20Helvetica%2C%20sans%2Dserif%3B%0A%2F%20font%2Dfamily%3ATahoma%2C%20Verdana%2C%20Geneva%2C%20sans%2Dserif%3B%0A%2F%20font%2Dfamily%3ACourier%2C%20monospace%3B%0A%2F%20font%2Dfamily%3A%22Times%20New%20Roman%22%2C%20Times%2C%20serif%3B%0A%09color%3A%20%23333333%3B%20%0A%2F%20color%3A%20%23000000%3B%20%0A%2F%20color%3A%20%23666666%3B%20%09%2F%20color%3A%20%23E3E3E3%3B%20%0A%2F%20color%3A%20white%3B%20line%2Dheight%3A%20100%25%3B%0Amax%2Dwidth%3A%20800px%3B%0Apadding%3A%2010px%3B%0Afont%2Dsize%3A%2017px%3B%0Atext%2Dalign%3A%20justify%3B%0Atext%2Djustify%3A%20inter%2Dword%3B%0A%7D%0Ap%20%7B%0Aline%2Dheight%3A%20150%25%3B%0A%2F%20max%2Dwidth%3A%20540px%3B%0Amax%2Dwidth%3A%20960px%3B%0Amargin%2Dbottom%3A%205px%3B%0Afont%2Dweight%3A%20400%3B%20%2F%20color%3A%20%23333333%0A%7D%0Ah1%2C%20h2%2C%20h3%2C%20h4%2C%20h5%2C%20h6%20%7B%0Afont%2Dweight%3A%20400%3B%0Amargin%2Dtop%3A%2035px%3B%0Amargin%2Dbottom%3A%2015px%3B%0Apadding%2Dtop%3A%2010px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%2070px%3B%0Acolor%3A%20%23606AAA%3B%0Afont%2Dsize%3A230%25%3B%0Afont%2Dvariant%3Asmall%2Dcaps%3B%0Apadding%2Dbottom%3A20px%3B%0Awidth%3A100%25%3B%0Aborder%2Dbottom%3A1px%20solid%20%23606AAA%3B%0A%7D%0Ah2%20%7B%0Afont%2Dsize%3A160%25%3B%0A%7D%0Ah3%20%7B%0Afont%2Dsize%3A130%25%3B%0A%7D%0Ah4%20%7B%0Afont%2Dsize%3A120%25%3B%0Afont%2Dvariant%3Asmall%2Dcaps%3B%0A%7D%0Ah5%20%7B%0Afont%2Dsize%3A120%25%3B%0A%7D%0Ah6%20%7B%0Afont%2Dsize%3A120%25%3B%0Afont%2Dvariant%3Asmall%2Dcaps%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%23606AAA%3B%0Amargin%3A%200%3B%0Apadding%3A%200%3B%0Avertical%2Dalign%3A%20baseline%3B%0A%7D%0Aa%3Ahover%20%7B%0Atext%2Ddecoration%3A%20blink%3B%0Acolor%3A%20green%3B%0A%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20gray%3B%0A%7D%0Aul%2C%20ol%20%7B%0Apadding%3A%200%3B%0Amargin%3A%200px%200px%200px%2050px%3B%0A%7D%0Aul%20%7B%0Alist%2Dstyle%2Dtype%3A%20square%3B%0Alist%2Dstyle%2Dposition%3A%20inside%3B%0A%7D%0Ali%20%7B%0Aline%2Dheight%3A150%25%20%7D%0Ali%20ul%2C%20li%20ul%20%7B%0Amargin%2Dleft%3A%2024px%3B%0A%7D%0Apre%20%7B%0Apadding%3A%200px%2010px%3B%0Amax%2Dwidth%3A%20800px%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20Andale%20Mono%2C%20monospace%2C%20courrier%20new%3B%0Aline%2Dheight%3A%201%2E5%3B%0Afont%2Dsize%3A%2015px%3B%0Abackground%3A%20%23F8F8F8%3B%0Aborder%2Dradius%3A%204px%3B%0Apadding%3A%205px%3B%0Adisplay%3A%20inline%2Dblock%3B%0Amax%2Dwidth%3A%20800px%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%0A%7D%0Ali%20code%2C%20p%20code%20%7B%0Abackground%3A%20%23CDCDCD%3B%0Acolor%3A%20%23606AAA%3B%0Apadding%3A%200px%205px%200px%205px%3B%0A%7D%0Acode%2Er%2C%20code%2Ecpp%20%7B%0Adisplay%3A%20block%3B%0Aword%2Dwrap%3A%20break%2Dword%3B%0Aborder%3A%201px%20solid%20%23606AAA%3B%20%7D%0Aaside%20%7B%0Adisplay%3A%20block%3B%0Afloat%3A%20right%3B%0Awidth%3A%20390px%3B%0A%7D%0Ablockquote%20%7B%0Aborder%2Dleft%3A%2E5em%20solid%20%23606AAA%3B%0Abackground%3A%20%23F8F8F8%3B%0Apadding%3A%200em%201em%200em%201em%3B%0Amargin%2Dleft%3A10px%3B%0Amax%2Dwidth%3A%20500px%3B%0A%7D%0Ablockquote%20cite%20%7B%0Aline%2Dheight%3A10px%3B%0Acolor%3A%23bfbfbf%3B%0A%7D%0Ablockquote%20cite%3Abefore%20%7B%0A%2Fcontent%3A%20%27%5C2014%20%5C00A0%27%3B%0A%7D%0Ablockquote%20p%2C%20blockquote%20li%20%7B%20color%3A%20%23666%3B%0A%7D%0Ahr%20%7B%0A%2F%20width%3A%20540px%3B%0Atext%2Dalign%3A%20left%3B%0Amargin%3A%200%20auto%200%200%3B%0Acolor%3A%20%23999%3B%0A%7D%0A%0Atable%20%7B%0Awidth%3A%20100%25%3B%0Aborder%2Dtop%3A%201px%20solid%20%23919699%3B%0Aborder%2Dleft%3A%201px%20solid%20%23919699%3B%0Aborder%2Dspacing%3A%200%3B%0A%7D%0Atable%20th%20%7B%0Apadding%3A%204px%208px%204px%208px%3B%0Atext%2Dalign%3A%20center%3B%0Acolor%3A%20white%3B%0Abackground%3A%20%23606AAA%3B%0Aborder%2Dbottom%3A%201px%20solid%20%23919699%3B%0Aborder%2Dright%3A%201px%20solid%20%23919699%3B%0A%7D%0Atable%20th%20p%20%7B%0Afont%2Dweight%3A%20bold%3B%0Amargin%2Dbottom%3A%200px%3B%20%7D%0Atable%20td%20%7B%0Apadding%3A%208px%3B%09vertical%2Dalign%3A%20top%3B%0Aborder%2Dbottom%3A%201px%20solid%20%23919699%3B%0Aborder%2Dright%3A%201px%20solid%20%23919699%3B%0A%7D%0Atable%20td%3Alast%2Dchild%20%7B%0A%2Fbackground%3A%20lightgray%3B%0Atext%2Dalign%3A%20right%3B%0A%7D%0Atable%20td%20p%20%7B%0Amargin%2Dbottom%3A%200px%3B%20%7D%0Atable%20td%20p%20%2B%20p%20%7B%0Amargin%2Dtop%3A%205px%3B%20%7D%0Atable%20td%20p%20%2B%20p%20%2B%20p%20%7B%0Amargin%2Dtop%3A%205px%3B%20%7D" rel="stylesheet" type="text/css" />
+<style type="text/css">body {margin: 0 auto;background-color: white;/ font-family:Georgia, Palatino, serif;font-family: "Open Sans", "Book Antiqua", Palatino, serif;/ font-family:Arial, Helvetica, sans-serif;/ font-family:Tahoma, Verdana, Geneva, sans-serif;/ font-family:Courier, monospace;/ font-family:"Times New Roman", Times, serif;	color: #333333; / color: #000000; / color: #666666; 	/ color: #E3E3E3; / color: white; line-height: 100%;max-width: 800px;padding: 10px;font-size: 17px;text-align: justify;text-justify: inter-word;}p {line-height: 150%;/ max-width: 540px;max-width: 960px;margin-bottom: 5px;font-weight: 400; / color: #333333}h1, h2, h3, h4, h5, h6 {font-weight: 400;margin-top: 35px;margin-bottom: 15px;padding-top: 10px;}h1 {margin-top: 70px;color: #606AAA;font-size:230%;font-variant:small-caps;padding-bottom:20px;width:100%;border-bottom:1px solid #606AAA;}h2 {font-size:160%;}h3 {font-size:130%;}h4 {font-size:120%;font-variant:small-caps;}h5 {font-size:120%;}h6 {font-size:120%;font-variant:small-caps;}a {color: #606AAA;margin: 0;padding: 0;vertical-align: baseline;}a:hover {text-decoration: blink;color: green;}a:visited {color: gray;}ul, ol {padding: 0;margin: 0px 0px 0px 50px;}ul {list-style-type: square;list-style-position: inside;}li {line-height:150% }li ul, li ul {margin-left: 24px;}pre {padding: 0px 10px;max-width: 800px;white-space: pre-wrap;}code {font-family: Consolas, Monaco, Andale Mono, monospace, courrier new;line-height: 1.5;font-size: 15px;background: #F8F8F8;border-radius: 4px;padding: 5px;display: inline-block;max-width: 800px;white-space: pre-wrap;}li code, p code {background: #CDCDCD;color: #606AAA;padding: 0px 5px 0px 5px;}code.r, code.cpp {display: block;word-wrap: break-word;border: 1px solid #606AAA; }aside {display: block;float: right;width: 390px;}blockquote {border-left:.5em solid #606AAA;background: #F8F8F8;padding: 0em 1em 0em 1em;margin-left:10px;max-width: 500px;}blockquote cite {line-height:10px;color:#bfbfbf;}blockquote cite:before {/content: '\2014 \00A0';}blockquote p, blockquote li { color: #666;}hr {/ width: 540px;text-align: left;margin: 0 auto 0 0;color: #999;}table {width: 100%;border-top: 1px solid #919699;border-left: 1px solid #919699;border-spacing: 0;}table th {padding: 4px 8px 4px 8px;text-align: center;color: white;background: #606AAA;border-bottom: 1px solid #919699;border-right: 1px solid #919699;}table th p {font-weight: bold;margin-bottom: 0px; }table td {padding: 8px;	vertical-align: top;border-bottom: 1px solid #919699;border-right: 1px solid #919699;}table td:last-child {/background: lightgray;text-align: right;}table td p {margin-bottom: 0px; }table td p + p {margin-top: 5px; }table td p + p + p {margin-top: 5px; }</style>
+
+
+
 
 </head>
 
@@ -78,27 +195,27 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 
 
 <h1 class="title toc-ignore">milr: Multiple-Instance Logistic Regression with Lasso Penalty</h1>
-<h4 class="author"><em>Ping-Yang Chen</em></h4>
+<h4 class="author">Ping-Yang Chen</h4>
 <address class="author_afil">
-Department of Statistics, National Cheng Kung University<br><a class="author_email" href="mailto:#"><a href="mailto:pychen.ping@gmail.com">pychen.ping@gmail.com</a></a>
+Department of Statistics, National Cheng Kung University<br><a class="author_email" href="mailto:#"><a href="mailto:pychen.ping@gmail.com" class="email">pychen.ping@gmail.com</a></a>
 </address>
-<h4 class="author"><em>Ching-Chuan Chen</em></h4>
+<h4 class="author">Ching-Chuan Chen</h4>
 <address class="author_afil">
-Department of Statistics, National Cheng Kung University<br><a class="author_email" href="mailto:#"><a href="mailto:zw12356@gmail.com">zw12356@gmail.com</a></a>
+Department of Statistics, National Cheng Kung University<br><a class="author_email" href="mailto:#"><a href="mailto:zw12356@gmail.com" class="email">zw12356@gmail.com</a></a>
 </address>
-<h4 class="author"><em>Chun-Hao Yang</em></h4>
+<h4 class="author">Chun-Hao Yang</h4>
 <address class="author_afil">
-Department of Statistics, University of Florida<br><a class="author_email" href="mailto:#"><a href="mailto:chunhaoyang@ufl.edu">chunhaoyang@ufl.edu</a></a>
+Department of Statistics, University of Florida<br><a class="author_email" href="mailto:#"><a href="mailto:chunhaoyang@ufl.edu" class="email">chunhaoyang@ufl.edu</a></a>
 </address>
-<h4 class="author"><em>Sheng-Mao Chang</em></h4>
+<h4 class="author">Sheng-Mao Chang</h4>
 <address class="author_afil">
-Department of Statistics, National Cheng Kung University<br><a class="author_email" href="mailto:#"><a href="mailto:smchang@mail.ncku.edu.tw">smchang@mail.ncku.edu.tw</a></a>
+Department of Statistics, National Cheng Kung University<br><a class="author_email" href="mailto:#"><a href="mailto:smchang@mail.ncku.edu.tw" class="email">smchang@mail.ncku.edu.tw</a></a>
 </address>
-<h4 class="author"><em>Kuo-Jung Lee</em></h4>
+<h4 class="author">Kuo-Jung Lee</h4>
 <address class="author_afil">
-Department of Statistics, National Cheng Kung University<br><a class="author_email" href="mailto:#"><a href="mailto:kuojunglee@mail.ncku.edu.tw">kuojunglee@mail.ncku.edu.tw</a></a>
+Department of Statistics, National Cheng Kung University<br><a class="author_email" href="mailto:#"><a href="mailto:kuojunglee@mail.ncku.edu.tw" class="email">kuojunglee@mail.ncku.edu.tw</a></a>
 </address>
-<h4 class="date"><em>2017-06-08</em></h4>
+<h4 class="date">2020-10-28</h4>
 <div class="abstract">
 <p class="abstract">Abstract</p>
 <p>The purpose of the proposed package <strong>milr</strong> is to analyze multiple-instance data. Ordinary multiple-instance data consists of many independent bags, and each bag is composed of several instances. The statuses of bags and instances are binary. Moreover, the statuses of instances are not observed, whereas the statuses of bags are observed. The functions in this package are applicable for analyzing multiple-instance data, simulating data via logistic regression, and selecting important covariates in the regression model. To this end, maximum likelihood estimation with an expectation-maximization algorithm is implemented for model estimation, and a lasso penalty added to the likelihood function is applied for variable selection. Additionally, an <code>milr</code> object is applicable to generic functions <code>fitted</code>, <code>predict</code> and <code>summary</code>. Simulated data and a real example are given to demonstrate the features of this package.</p>
@@ -127,17 +244,17 @@ Department of Statistics, National Cheng Kung University<br><a class="author_ema
 
 <div id="introduction" class="section level1">
 <h1><span class="header-section-number">1</span> Introduction</h1>
-<p>Multiple-instance learning (MIL) is used to model the class labels which are associated with bags of observations instead of the individual observations. This technique has been widely used in solving many different real-world problems. In the early stage of the MIL application, <span class="citation">Dietterich, Lathrop, and Lozano-Pérez (1997)</span> studied the drug-activity prediction problem. A molecule is classified as a good drug if it is able to bind strongly to a binding site on the target molecule. The problem is: one molecule can adopt multiple shapes called the conformations and only one or a few conformations can bind the target molecule well. They described a molecule by a bag of its many possible conformations whose binding strength remains unknown. An important application of MIL is the image and text categorization, such as in <span class="citation">Maron and Ratan (1998)</span>, <span class="citation">Andrews, Tsochantaridis, and Hofmann (2003)</span>, <span class="citation">J. Zhang et al. (2007)</span>, <span class="citation">Zhou, Sun, and Li (2009)</span>, <span class="citation">W. Li et al. (2011)</span>, <span class="citation">Kotzias et al. (2015)</span>, to name a few. An image (bag) possessing at least one particular pattern (instance) is categorized into one class; otherwise, it is categorized into another class. For example, <span class="citation">Maron and Ratan (1998)</span> treated the natural scene images as bags, and, each bag is categorized as the scene of waterfall if at least one of its subimages is the waterfall. Whereas, <span class="citation">Zhou, Sun, and Li (2009)</span> studied the categorization of collections (bags) of posts (instances) from different newsgroups corpus. A collection is a positive bag if it contains 3% posts from a target corpus category and the remaining 97% posts, as well as all posts in the negative bags, belong to the other corpus categories. MIL is also used in medical researches. The UCSB breast cancer study (<span class="citation">Kandemir, Zhang, and A. (2014)</span>) is such a case. Patients (bags) were diagnosed as having or not having cancer by doctors; however, the computer, initially, had no knowledge of which patterns (instances) were associated with the disease. Furthermore, in manufacturing processes (<span class="citation">R.-B. Chen et al. (2016)</span>), a product (bag) is defective as long as one or more of its components (instances) are defective. In practice, at the initial stage, we only know that a product is defective, and we have no idea which component is responsible for the defect.</p>
-<p>Several approaches have been offered to analyze datasets with multiple instances, e.g., <span class="citation">Maron (1998)</span>, <span class="citation">S. Ray and Craven (2005)</span>, <span class="citation">X. Xu and Frank (2004)</span>, <span class="citation">Q. Zhang and Goldman (2002)</span>. From our point of view, the statuses of these components are missing variables, and thus, the Expectation-Maximization (EM) algorithm (<span class="citation">Dempster, Laird, and Rubin (1977)</span>) can play a role in multiple-instance learning. By now the toolboxes or libraries available for implementing MIL methods are developed by other computer softwares. For example, <span class="citation">J. Yang (2008)</span> and <span class="citation">Tax and Cheplygina (2016)</span> are implemented in MATLAB software, but neither of them carries the methods based on logistic regression model. <span class="citation">Settles, Craven, and Ray (2008)</span> provided the Java codes including the method introduced in <span class="citation">S. Ray and Craven (2005)</span>. Thus, for R users, we are first to develop a MIL-related package based on logistic regression modelling which is called multiple-instance logistic regression (MILR). In this package, we first apply the logistic regression defined in <span class="citation">S. Ray and Craven (2005)</span> and <span class="citation">X. Xu and Frank (2004)</span>, and then, we use the EM algorithm to obtain maximum likelihood estimates of the regression coefficients. In addition, the popular lasso penalty (<span class="citation">R. Tibshirani (1996)</span>) is applied to the likelihood function so that parameter estimation and variable selection can be performed simultaneously. This feature is especially desirable when the number of covariates is relatively large.</p>
+<p>Multiple-instance learning (MIL) is used to model the class labels which are associated with bags of observations instead of the individual observations. This technique has been widely used in solving many different real-world problems. In the early stage of the MIL application, <span class="citation">Dietterich, Lathrop, and Lozano-Pérez (1997)</span> studied the drug-activity prediction problem. A molecule is classified as a good drug if it is able to bind strongly to a binding site on the target molecule. The problem is: one molecule can adopt multiple shapes called the conformations and only one or a few conformations can bind the target molecule well. They described a molecule by a bag of its many possible conformations whose binding strength remains unknown. An important application of MIL is the image and text categorization, such as in <span class="citation">Maron and Ratan (1998)</span>, <span class="citation">Andrews, Tsochantaridis, and Hofmann (2003)</span>, <span class="citation">Zhang et al. (2007)</span>, <span class="citation">Zhou, Sun, and Li (2009)</span>, <span class="citation">Li et al. (2011)</span>, <span class="citation">Kotzias et al. (2015)</span>, to name a few. An image (bag) possessing at least one particular pattern (instance) is categorized into one class; otherwise, it is categorized into another class. For example, <span class="citation">Maron and Ratan (1998)</span> treated the natural scene images as bags, and, each bag is categorized as the scene of waterfall if at least one of its subimages is the waterfall. Whereas, <span class="citation">Zhou, Sun, and Li (2009)</span> studied the categorization of collections (bags) of posts (instances) from different newsgroups corpus. A collection is a positive bag if it contains 3% posts from a target corpus category and the remaining 97% posts, as well as all posts in the negative bags, belong to the other corpus categories. MIL is also used in medical researches. The UCSB breast cancer study (<span class="citation">Kandemir, Zhang, and A. (2014)</span>) is such a case. Patients (bags) were diagnosed as having or not having cancer by doctors; however, the computer, initially, had no knowledge of which patterns (instances) were associated with the disease. Furthermore, in manufacturing processes (<span class="citation">Chen et al. (2016)</span>), a product (bag) is defective as long as one or more of its components (instances) are defective. In practice, at the initial stage, we only know that a product is defective, and we have no idea which component is responsible for the defect.</p>
+<p>Several approaches have been offered to analyze datasets with multiple instances, e.g., <span class="citation">Maron (1998)</span>, <span class="citation">Ray and Craven (2005)</span>, <span class="citation">Xu and Frank (2004)</span>, <span class="citation">Zhang and Goldman (2002)</span>. From our point of view, the statuses of these components are missing variables, and thus, the Expectation-Maximization (EM) algorithm (<span class="citation">Dempster, Laird, and Rubin (1977)</span>) can play a role in multiple-instance learning. By now the toolboxes or libraries available for implementing MIL methods are developed by other computer softwares. For example, <span class="citation">Yang (2008)</span> and <span class="citation">Tax and Cheplygina (2016)</span> are implemented in MATLAB software, but neither of them carries the methods based on logistic regression model. <span class="citation">Settles, Craven, and Ray (2008)</span> provided the Java codes including the method introduced in <span class="citation">Ray and Craven (2005)</span>. Thus, for R users, we are first to develop a MIL-related package based on logistic regression modelling which is called multiple-instance logistic regression (MILR). In this package, we first apply the logistic regression defined in <span class="citation">Ray and Craven (2005)</span> and <span class="citation">Xu and Frank (2004)</span>, and then, we use the EM algorithm to obtain maximum likelihood estimates of the regression coefficients. In addition, the popular lasso penalty (<span class="citation">Tibshirani (1996)</span>) is applied to the likelihood function so that parameter estimation and variable selection can be performed simultaneously. This feature is especially desirable when the number of covariates is relatively large.</p>
 <p>To fix ideas, we firstly define the notations and introduce the construction of the likelihood function. Suppose that the dataset consists of <span class="math inline">\(n\)</span> bags and that there are <span class="math inline">\(m_i\)</span> instances in the <span class="math inline">\(i\)</span>th bag for <span class="math inline">\(i=1,\dots, n\)</span>. Let <span class="math inline">\(Z_i\)</span> denote the status of the <span class="math inline">\(i\)</span>th bag, and let <span class="math inline">\(Y_{ij}\)</span> be the status of the <span class="math inline">\(j\)</span>th instance in the <span class="math inline">\(i\)</span>th bag along with <span class="math inline">\(x_{ij} \in \Re^p\)</span> as the corresponding covariates. We assume that the <span class="math inline">\(Y_{ij}\)</span> follow independent Bernoulli distributions with defect rates of <span class="math inline">\(p_{ij}\)</span>, where <span class="math inline">\(p_{ij}=g\left(\beta_0+x_{ij}^T\beta\right)\)</span> and <span class="math inline">\(g(x) = 1/\left(1+e^{-x}\right)\)</span>. We also assume that the <span class="math inline">\(Z_i\)</span> follow independent Bernoulli distributions with defect rates of <span class="math inline">\(\pi_i\)</span>. Therefore, the bag-level likelihood function is</p>
-<span class="math display">\[\begin{equation}\label{eq:L}
+<p><span class="math display">\[\begin{equation}\label{eq:L}
 L\left(\beta_0,\beta\right)=\prod_{i=1}^n\pi_i^{z_i}\left(1-\pi_i\right)^{1-z_i}.
-\end{equation}\]</span>
-<p>To associate the bag-level defect rate <span class="math inline">\(\pi_i\)</span> with the instance-level defect rates <span class="math inline">\(p_{ij}\)</span>, several methods have been proposed. The bag-level status is defined as <span class="math inline">\(Z_i=I\left(\sum_{j=1}^{m_i}Y_{ij}&gt;0\right)\)</span>. If the independence assumption among the <span class="math inline">\(Y_{ij}\)</span> holds, the bag-level defect rate is <span class="math inline">\(\pi_i=1-\prod_{j=1}^{m_i}(1-p_{ij})\)</span>. On the other hand, if the independence assumption might not be held, <span class="citation">X. Xu and Frank (2004)</span> and <span class="citation">S. Ray and Craven (2005)</span> proposed the softmax function to associate <span class="math inline">\(\pi_i\)</span> to <span class="math inline">\(p_{ij}\)</span>, as follows:</p>
-<span class="math display">\[\begin{equation}\label{eq:softmax}
+\end{equation}\]</span></p>
+<p>To associate the bag-level defect rate <span class="math inline">\(\pi_i\)</span> with the instance-level defect rates <span class="math inline">\(p_{ij}\)</span>, several methods have been proposed. The bag-level status is defined as <span class="math inline">\(Z_i=I\left(\sum_{j=1}^{m_i}Y_{ij}&gt;0\right)\)</span>. If the independence assumption among the <span class="math inline">\(Y_{ij}\)</span> holds, the bag-level defect rate is <span class="math inline">\(\pi_i=1-\prod_{j=1}^{m_i}(1-p_{ij})\)</span>. On the other hand, if the independence assumption might not be held, <span class="citation">Xu and Frank (2004)</span> and <span class="citation">Ray and Craven (2005)</span> proposed the softmax function to associate <span class="math inline">\(\pi_i\)</span> to <span class="math inline">\(p_{ij}\)</span>, as follows:</p>
+<p><span class="math display">\[\begin{equation}\label{eq:softmax}
 s_i\left(\alpha\right)=\sum_{j=1}^{m_i}p_{ij}\exp{\left\{\alpha p_{ij}\right\}} \Big/ \sum_{j=1}^{m_i}\exp{\left\{\alpha p_{ij}\right\}},
-\end{equation}\]</span>
-<p>where <span class="math inline">\(\alpha\)</span> is a pre-specified nonnegative value. <span class="citation">X. Xu and Frank (2004)</span> used <span class="math inline">\(\alpha=0\)</span>, therein modeling <span class="math inline">\(\pi_i\)</span> by taking the average of <span class="math inline">\(p_{ij}\)</span>, <span class="math inline">\(j=1,\ldots,m_i\)</span>, whereas <span class="citation">S. Ray and Craven (2005)</span> suggested <span class="math inline">\(\alpha=3\)</span>. We observe that the likelihood () applying neither the <span class="math inline">\(\pi_i\)</span> function nor the <span class="math inline">\(s_i(\alpha)\)</span> function results in effective estimators.</p>
+\end{equation}\]</span></p>
+<p>where <span class="math inline">\(\alpha\)</span> is a pre-specified nonnegative value. <span class="citation">Xu and Frank (2004)</span> used <span class="math inline">\(\alpha=0\)</span>, therein modeling <span class="math inline">\(\pi_i\)</span> by taking the average of <span class="math inline">\(p_{ij}\)</span>, <span class="math inline">\(j=1,\ldots,m_i\)</span>, whereas <span class="citation">Ray and Craven (2005)</span> suggested <span class="math inline">\(\alpha=3\)</span>. We observe that the likelihood () applying neither the <span class="math inline">\(\pi_i\)</span> function nor the <span class="math inline">\(s_i(\alpha)\)</span> function results in effective estimators.</p>
 <p>Below, we begin by establishing the E-steps and M-steps required for the EM algorithm and then attach the lasso penalty for the estimation and feature selection. Several computation strategies applied are the same as those addressed in <span class="citation">Friedman, Hastie, and Tibshirani (2010)</span>. Finally, we demonstrate the functions provided in the <strong>milr</strong> package via simulations and on a real dataset.</p>
 </div>
 <div id="the-multiple-instance-logistic-regression" class="section level1">
@@ -152,17 +269,17 @@ s_i\left(\alpha\right)=\sum_{j=1}^{m_i}p_{ij}\exp{\left\{\alpha p_{ij}\right\}} 
         I\left(\sum_{j=1}^{m_i}y_{ij}&gt;0\right)
       }{1-\prod_{l=1}^{m_i}q_{il}}.
 \]</span> Thus, the conditional expectations are</p>
-<span class="math display">\[\begin{equation*}
+<p><span class="math display">\[\begin{equation*}
 E\left(Y_{ij}\mid Z_i=0\right)=0
 \quad \mbox{ and } \quad
 E\left(Y_{ij}\mid Z_i=1\right)=\frac{p_{ij}}{1-\prod_{l=1}^{m_i}q_{il}}\equiv\gamma_{ij}.
-\end{equation*}\]</span>
+\end{equation*}\]</span></p>
 <p>The <span class="math inline">\(Q\)</span> function at step <span class="math inline">\(t\)</span> is <span class="math inline">\(Q\left(\beta_0,\beta\mid\beta_0^t,\beta^t\right) = \sum_{i=1}^nQ_i\left(\beta_0,\beta\mid\beta_0^t,\beta^t\right)\)</span>, where <span class="math inline">\(Q_i\)</span> is the conditional expectation of the complete log-likelihood for the <span class="math inline">\(i\)</span>th bag given <span class="math inline">\(Z_i\)</span>, which is defined as</p>
-<span class="math display">\[\begin{align*}
+<p><span class="math display">\[\begin{align*}
 Q_i\left(\beta_0,\beta\mid\beta_0^t,\beta^t\right)
  &amp; = E\left(\sum_{j=1}^{m_i}y_{ij}\log{\left(p_{ij}\right)}+\left(1-y_{ij}\right)\log{\left(q_{ij}\right)} ~\Bigg|~ Z_i=z_i,\beta_0^t,\beta^t\right) \\
  &amp; = \sum_{j=1}^{m_i}z_i\gamma_{ij}^t\left(\beta_0+x_{ij}^T\beta\right)-\log{\left(1+e^{\beta_0+x_{ij}^T\beta}\right)}.
-\end{align*}\]</span>
+\end{align*}\]</span></p>
 <p>Note that all the <span class="math inline">\(p_{ij}\)</span>, <span class="math inline">\(q_{ij}\)</span>, and <span class="math inline">\(\gamma_{ij}\)</span> are functions of <span class="math inline">\(\beta_0\)</span> and <span class="math inline">\(\beta\)</span>, and thus, we define these functions by substituting <span class="math inline">\(\beta_0\)</span> and <span class="math inline">\(\beta\)</span> by their current estimates <span class="math inline">\(\beta_0^t\)</span> and <span class="math inline">\(\beta^t\)</span> to obtain <span class="math inline">\(p_{ij}^t\)</span>, <span class="math inline">\(q_{ij}^t\)</span>, and <span class="math inline">\(\gamma_{ij}^t\)</span>, respectively.</p>
 <p>In the M-step, we maximize this <span class="math inline">\(Q\)</span> function with respect to <span class="math inline">\(\left(\beta_0, \beta\right)\)</span>. Since the maximization of the nonlinear <span class="math inline">\(Q\)</span> function is computationally expensive, following <span class="citation">Friedman, Hastie, and Tibshirani (2010)</span>, the quadratic approximation to <span class="math inline">\(Q\)</span> is applied. Taking the second-order Taylor expansion about <span class="math inline">\(\beta_0^t\)</span> and <span class="math inline">\(\beta^t\)</span>, we have <span class="math inline">\(Q\left(\beta_0,\beta\mid\beta_0^t,\beta^t\right) =Q_Q\left(\beta_0,\beta\mid \beta_0^t,\beta^t\right) + C + R_2\left(\beta_0,\beta\mid\beta_0^t,\beta^t\right)\)</span>, where <span class="math inline">\(C\)</span> is a constant in terms of <span class="math inline">\(\beta_0\)</span> and <span class="math inline">\(\beta\)</span>, <span class="math inline">\(R_2\left(\beta_0,\beta\mid\beta_0^t,\beta^t\right)\)</span> is the remainder term of the expansion and <span class="math display">\[
   Q_Q\left(\beta_0,\beta\mid \beta_0^t,\beta^t\right) =
@@ -171,10 +288,10 @@ Q_i\left(\beta_0,\beta\mid\beta_0^t,\beta^t\right)
 </div>
 <div id="variable-selection-with-lasso-penalty" class="section level2">
 <h2><span class="header-section-number">2.2</span> Variable selection with lasso penalty</h2>
-<p>We adopt the lasso method (<span class="citation">R. Tibshirani (1996)</span>) to identify active features in this MILR framework. The key is to add the <span class="math inline">\(L_1\)</span> penalty into the objective function in the M-step so that the EM algorithm is capable of performing estimation and variable selection simultaneously. To this end, we rewrite the objective function as</p>
-<span class="math display">\[\begin{equation}\label{eq:lasso}
+<p>We adopt the lasso method (<span class="citation">Tibshirani (1996)</span>) to identify active features in this MILR framework. The key is to add the <span class="math inline">\(L_1\)</span> penalty into the objective function in the M-step so that the EM algorithm is capable of performing estimation and variable selection simultaneously. To this end, we rewrite the objective function as</p>
+<p><span class="math display">\[\begin{equation}\label{eq:lasso}
 \underset{\beta_0,\beta}{\min}\left\{-Q_Q\left(\beta_0,\beta\mid \beta_0^t,\beta^t\right)+\lambda\sum_{k=1}^p\left|\beta_k\right|\right\}.
-\end{equation}\]</span>
+\end{equation}\]</span></p>
 <p>Note that the intercept term <span class="math inline">\(\beta_0\)</span> is always kept in the model; thus, we do not place a penalty on <span class="math inline">\(\beta_0\)</span>. In addition, <span class="math inline">\(\lambda\)</span> is the tuning parameter, and we will introduce how to determine this parameter later. We applied the shooting algorithm (<span class="citation">Fu (1998)</span>, milr_paper) to update <span class="math inline">\(\left(\beta^t_0,\beta^t\right)\)</span>.</p>
 </div>
 </div>
@@ -189,19 +306,19 @@ Q_i\left(\beta_0,\beta\mid\beta_0^t,\beta^t\right)
 </div>
 <div id="the-milr-and-softmax-apporaches" class="section level2">
 <h2><span class="header-section-number">3.2</span> The milr and softmax apporaches</h2>
-<p>In the <strong>milr</strong> package, we provide two approaches to model the multiple-instance data: the proposed <code>milr</code> (<span class="citation">R.-B. Chen et al. (2016)</span>) and the <code>softmax</code> approach (<span class="citation">X. Xu and Frank (2004)</span>). To implement these two approaches, we assume that the number of observations and covariates are <span class="math inline">\(N\)</span> and <span class="math inline">\(p\)</span>, respectively. The input data for both <code>milr</code> and <code>softmax</code> are separated into three parts: the bag-level statuses, <code>y</code>, as a vector of length <span class="math inline">\(N\)</span>; the <span class="math inline">\(N\times p\)</span> design matrix, <code>x</code>; and <code>bag</code>, the vector of indices of length <span class="math inline">\(N\)</span>, representing the indices of the bag to which each instance belongs.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">milr</span>(y, x, bag, lambda, numLambda, lambdaCriterion, nfold, maxit)
-<span class="kw">softmax</span>(y, x, bag, alpha, ...)</code></pre></div>
+<p>In the <strong>milr</strong> package, we provide two approaches to model the multiple-instance data: the proposed <code>milr</code> (<span class="citation">Chen et al. (2016)</span>) and the <code>softmax</code> approach (<span class="citation">Xu and Frank (2004)</span>). To implement these two approaches, we assume that the number of observations and covariates are <span class="math inline">\(N\)</span> and <span class="math inline">\(p\)</span>, respectively. The input data for both <code>milr</code> and <code>softmax</code> are separated into three parts: the bag-level statuses, <code>y</code>, as a vector of length <span class="math inline">\(N\)</span>; the <span class="math inline">\(N\times p\)</span> design matrix, <code>x</code>; and <code>bag</code>, the vector of indices of length <span class="math inline">\(N\)</span>, representing the indices of the bag to which each instance belongs.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="kw">milr</span>(y, x, bag, lambda, numLambda, lambdaCriterion, nfold, maxit)</span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="kw">softmax</span>(y, x, bag, alpha, ...)</span></code></pre></div>
 <p>For the <code>milr</code> function, specifying <code>lambda</code> in different ways controls whether and how the lasso penalty participates in parameter estimation. The default value of <code>lambda</code> is <span class="math inline">\(0\)</span>. With this value, the ordinary MLE is applied, i.e., no penalty term is considered. This is the suggested choice when the number of covariates <span class="math inline">\(p\)</span> is small. When <span class="math inline">\(p\)</span> is large or when variable selection is desired, users can specify a <span class="math inline">\(\lambda\)</span> vector of length <span class="math inline">\(\kappa\)</span>; otherwise, by letting <code>lambda = -1</code>, the program automatically provides a <span class="math inline">\(\lambda\)</span> vector of length <span class="math inline">\(\kappa=\)</span><code>numLambda</code> as the tuning set. Following <span class="citation">Friedman, Hastie, and Tibshirani (2010)</span>, the theoretical maximal value of <span class="math inline">\(\lambda\)</span> in () is</p>
-<span class="math display">\[\begin{equation*}\label{eq:lammax}
+<p><span class="math display">\[\begin{equation*}\label{eq:lammax}
 \lambda_{max}=\left[\prod_{i=1}^n\left(m_i-1\right)\right]^{\frac{1}{2}}\left[\prod_{i=1}^nm_i^{1-2z_i}\right]^{\frac{1}{2}}.
-\end{equation*}\]</span>
-<p>The automatically specified sequence of <span class="math inline">\(\lambda\)</span> values ranges from <span class="math inline">\(\lambda_{min}=\lambda_{max}/1000\)</span> to <span class="math inline">\(\lambda_{max}\)</span> in ascending order.</p>
+\end{equation*}\]</span></p>
+<p> The automatically specified sequence of <span class="math inline">\(\lambda\)</span> values ranges from <span class="math inline">\(\lambda_{min}=\lambda_{max}/1000\)</span> to <span class="math inline">\(\lambda_{max}\)</span> in ascending order.</p>
 <p>The default setting for choosing the optimal <span class="math inline">\(\lambda\)</span> among these <span class="math inline">\(\lambda\)</span> values is the Bayesian information criterion (BIC), <span class="math inline">\(-2\log{(likelihood)} + p^*\times\log{(n)}\)</span>, where <span class="math inline">\(p^*\)</span> is the number of nonzero regression coefficients. Alternatively, the user can use the options <code>lambdaCriterion = &quot;deviance&quot;</code> and <code>nfold = K</code> with an integer <code>K</code> to obtain the best <span class="math inline">\(\lambda\)</span> that minimizes the predictive deviance through ‘bag-wise’ K-fold cross validation. The last option, <code>maxit</code>, indicates the maximal number of iterations of the EM algorithm; its default value is 500.</p>
 <p>For the <code>softmax</code> function, the option <code>alpha</code> is a nonnegative real number for the <span class="math inline">\(\alpha\)</span> value in (). The maximum likelihood estimators of the regression coefficients are obtained by the generic function <code>optim</code>. Note that no variable selection approach is implemented for this method.</p>
 <p>Two generic accessory functions, <code>coef</code> and <code>fitted</code>, can be used to extract the regression coefficients and the fitted bag-level labels returned by <code>milr</code> and <code>softmax</code>. We also provide the significance test based on Wald’s test for the <code>milr</code> estimations without the lasso penalty through the <code>summary</code> function. In addition, to predict the bag-level statuses for the new data set, the <code>predict</code> function can be used by assigning three items: <code>object</code> is the fitted model obtained by <code>milr</code> or <code>softmax</code>, <code>newdata</code> is the covariate matrix, and <code>bag\_newdata</code> is the bag indices of the new dataset. Finally, the MIL model can be used to predict the bag-level labels and the instances-level labels. The option <code>type</code> in <code>fitted</code> and <code>predicted</code> functions controls the type of output labels. The default option is <code>type = &quot;bag&quot;</code> which results the bag-level prediction. Otherwise, by setting <code>type = &quot;instance&quot;</code>, the instances-level labels will be presented.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fitted</span>(object, type)
-<span class="kw">predict</span>(object, newdata, bag_newdata, type)</code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">fitted</span>(object, type)</span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="kw">predict</span>(object, newdata, bag_newdata, type)</span></code></pre></div>
 </div>
 </div>
 <div id="examples" class="section level1">
@@ -209,286 +326,212 @@ Q_i\left(\beta_0,\beta\mid\beta_0^t,\beta^t\right)
 <p>We illustrate the usage of the <strong>milr</strong> package via simulated and real examples.</p>
 <div id="estimation-and-variable-selection" class="section level2">
 <h2><span class="header-section-number">4.1</span> Estimation and variable selection</h2>
-<p>We demonstrate how to apply the <code>milr</code> function for model estimation and variable selection. We simulate data with <span class="math inline">\(n=50\)</span> bags, each containing <span class="math inline">\(m=3\)</span> instances and regression coefficients <span class="math inline">\(\beta = (-2, -1, 1, 2, 0.5, 0, 0, 0, 0, 0)\)</span>. Specifically, the first four covariates are important.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(milr)
-<span class="kw">library</span>(pipeR)
-<span class="kw">set.seed</span>(<span class="dv">99</span>)
-<span class="co"># set the size of dataset</span>
-numOfBag &lt;-<span class="st"> </span><span class="dv">50</span>
-numOfInstsInBag &lt;-<span class="st"> </span><span class="dv">3</span>
-<span class="co"># set true coefficients: beta_0, beta_1, beta_2, beta_3</span>
-trueCoefs &lt;-<span class="st"> </span><span class="kw">c</span>(-<span class="dv">2</span>, -<span class="dv">2</span>, -<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="fl">0.5</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">0</span>)
-trainData &lt;-<span class="st"> </span><span class="kw">DGP</span>(numOfBag, numOfInstsInBag, trueCoefs)
-<span class="kw">colnames</span>(trainData$X) &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;X&quot;</span>, <span class="dv">1</span>:<span class="kw">ncol</span>(trainData$X))
-(instanceResponse &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">with</span>(trainData, <span class="kw">tapply</span>(Z, ID, any))))</code></pre></div>
-<pre><code>##  [1] 1 1 1 1 1 1 0 1 0 0 0 1 0 1 1 1 1 1 1 1 0 1 1 1 0 0 0 1 0 1 1 0 0 1 1
-## [36] 1 1 1 1 1 1 1 0 1 0 0 1 0 0 1</code></pre>
+<p>We demonstrate how to apply the <code>milr</code> function for model estimation and variable selection. We simulate data with <span class="math inline">\(n=30\)</span> bags, each containing <span class="math inline">\(m=3\)</span> instances and regression coefficients <span class="math inline">\(\beta = (-2, -1, 1, 2, 0.5, 0, 0, 0, 0, 0)\)</span>. Specifically, the first four covariates are important.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a><span class="kw">library</span>(milr)</span>
+<span id="cb3-2"><a href="#cb3-2"></a><span class="kw">library</span>(pipeR)</span>
+<span id="cb3-3"><a href="#cb3-3"></a><span class="kw">set.seed</span>(<span class="dv">99</span>)</span>
+<span id="cb3-4"><a href="#cb3-4"></a><span class="co"># set the size of dataset</span></span>
+<span id="cb3-5"><a href="#cb3-5"></a>numOfBag &lt;-<span class="st"> </span><span class="dv">30</span></span>
+<span id="cb3-6"><a href="#cb3-6"></a>numOfInstsInBag &lt;-<span class="st"> </span><span class="dv">3</span></span>
+<span id="cb3-7"><a href="#cb3-7"></a><span class="co"># set true coefficients: beta_0, beta_1, beta_2, beta_3</span></span>
+<span id="cb3-8"><a href="#cb3-8"></a>trueCoefs &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="op">-</span><span class="dv">2</span>, <span class="dv">-1</span>, <span class="dv">2</span>, <span class="fl">0.5</span>)</span>
+<span id="cb3-9"><a href="#cb3-9"></a>trainData &lt;-<span class="st"> </span><span class="kw">DGP</span>(numOfBag, numOfInstsInBag, trueCoefs)</span>
+<span id="cb3-10"><a href="#cb3-10"></a><span class="kw">colnames</span>(trainData<span class="op">$</span>X) &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;X&quot;</span>, <span class="dv">1</span><span class="op">:</span><span class="kw">ncol</span>(trainData<span class="op">$</span>X))</span>
+<span id="cb3-11"><a href="#cb3-11"></a>(instanceResponse &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">with</span>(trainData, <span class="kw">tapply</span>(Z, ID, any))))</span></code></pre></div>
+<pre><code>##  [1] 0 1 0 1 0 1 1 1 0 0 1 1 1 0 1 0 1 1 0 0 1 0 1 1 0 1 1 1 1 1</code></pre>
 <p>Since the number of covariates is small, we then use the <code>milr</code> function to estimate the model parameters with <code>lambda = 0</code>. One can apply <code>summary</code> to produce results including estimates of the regression coefficients and their corresponding standard error, testing statistics and the P-values under Wald’s test. The regression coefficients are returned by the function <code>coef</code>.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># fit milr model</span>
-milrFit_EST &lt;-<span class="st"> </span><span class="kw">milr</span>(trainData$Z, trainData$X, trainData$ID, <span class="dt">lambda =</span> <span class="dv">0</span>)</code></pre></div>
-<pre><code>## Lasso-penalty is not used.</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># call the Wald test result</span>
-<span class="kw">summary</span>(milrFit_EST)</code></pre></div>
-<pre><code>## Log-Likelihood: -3.969.</code></pre>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="co"># fit milr model</span></span>
+<span id="cb5-2"><a href="#cb5-2"></a>milrFit_EST &lt;-<span class="st"> </span><span class="kw">milr</span>(trainData<span class="op">$</span>Z, trainData<span class="op">$</span>X, trainData<span class="op">$</span>ID, <span class="dt">lambda =</span> <span class="fl">1e-7</span>)</span></code></pre></div>
+<pre><code>## Use the user-defined lambda vector.</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a><span class="co"># call the Wald test result</span></span>
+<span id="cb7-2"><a href="#cb7-2"></a><span class="kw">summary</span>(milrFit_EST)</span></code></pre></div>
+<pre><code>## Log-Likelihood: -15.550.</code></pre>
+<pre><code>## Chosen Penalty: 0.000.</code></pre>
 <pre><code>## Estimates:</code></pre>
-<pre><code>##           Estimate  Std.Err Z value  Pr(&gt;z)  
-## intercept -5.74156  2.55833 -2.2443 0.02482 *
-## X1        -5.75495  2.61345 -2.2021 0.02766 *
-## X2        -0.81066  0.98933 -0.8194 0.41255  
-## X3         5.15616  2.41108  2.1385 0.03247 *
-## X4         5.14240  2.45991  2.0905 0.03657 *
-## X5         2.26233  1.22981  1.8396 0.06583 .
-## X6        -2.55779  1.66536 -1.5359 0.12457  
-## X7        -0.83306  1.25562 -0.6635 0.50703  
-## X8         0.38746  0.82876  0.4675 0.64013  
-## X9         1.18565  0.98515  1.2035 0.22878  
-## X10       -1.42732  1.14157 -1.2503 0.21118  
-## ---
-## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># call the regression coefficients</span>
-<span class="kw">coef</span>(milrFit_EST)</code></pre></div>
-<pre><code>##  intercept         X1         X2         X3         X4         X5 
-## -5.7415608 -5.7549500 -0.8106618  5.1561629  5.1424035  2.2623284 
-##         X6         X7         X8         X9        X10 
-## -2.5577931 -0.8330627  0.3874582  1.1856494 -1.4273210</code></pre>
+<pre><code>##           Estimate
+## intercept  -1.4016
+## X1          1.4028
+## X2          0.3787
+## X3          1.0886</code></pre>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1"></a><span class="co"># call the regression coefficients</span></span>
+<span id="cb12-2"><a href="#cb12-2"></a><span class="kw">coef</span>(milrFit_EST)</span></code></pre></div>
+<pre><code>##  intercept         X1         X2         X3 
+## -1.4015728  1.4027912  0.3787156  1.0886233</code></pre>
 <p>The generic function <code>table</code> builds a contingency table of the counts for comparing the true bag-level statuses and the fitted bag-level statuses (obtained by the option <code>type = &quot;bag&quot;</code>) and the <code>predict</code> function is used to predict the labels of each bag with corresponding covariate <span class="math inline">\(X\)</span>. On the other hand, The fitted and predicted instance-level statuses can also be found by setting <code>type = &quot;instance&quot;</code> in the <code>fitted</code> and <code>predict</code> functions.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">fitted</span>(milrFit_EST, <span class="dt">type =</span> <span class="st">&quot;bag&quot;</span>) </code></pre></div>
-<pre><code>##  [1] 1 1 1 1 1 1 0 1 0 0 0 1 0 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 1 1 0 0 1 1
-## [36] 1 1 1 1 1 1 1 0 1 0 0 1 0 0 1</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># fitted(milrFit_EST, type = &quot;instance&quot;) # instance-level fitted labels</span>
-<span class="kw">table</span>(<span class="dt">DATA =</span> instanceResponse, <span class="dt">FITTED =</span> <span class="kw">fitted</span>(milrFit_EST, <span class="dt">type =</span> <span class="st">&quot;bag&quot;</span>)) </code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1"></a><span class="kw">fitted</span>(milrFit_EST, <span class="dt">type =</span> <span class="st">&quot;bag&quot;</span>) </span></code></pre></div>
+<pre><code>##  [1] 1 0 1 1 0 0 1 1 1 0 1 0 1 0 0 0 1 1 0 1 1 0 1 1 1 1 0 1 1 1</code></pre>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1"></a><span class="co"># fitted(milrFit_EST, type = &quot;instance&quot;) # instance-level fitted labels</span></span>
+<span id="cb16-2"><a href="#cb16-2"></a><span class="kw">table</span>(<span class="dt">DATA =</span> instanceResponse, <span class="dt">FITTED =</span> <span class="kw">fitted</span>(milrFit_EST, <span class="dt">type =</span> <span class="st">&quot;bag&quot;</span>)) </span></code></pre></div>
 <pre><code>##     FITTED
 ## DATA  0  1
-##    0 16  1
-##    1  1 32</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># predict for testing data</span>
-testData &lt;-<span class="st"> </span><span class="kw">DGP</span>(numOfBag, numOfInstsInBag, trueCoefs)
-<span class="kw">colnames</span>(testData$X) &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;X&quot;</span>, <span class="dv">1</span>:<span class="kw">ncol</span>(testData$X))
-(instanceResponseTest &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">with</span>(trainData, <span class="kw">tapply</span>(Z, ID, any))))</code></pre></div>
-<pre><code>##  [1] 1 1 1 1 1 1 0 1 0 0 0 1 0 1 1 1 1 1 1 1 0 1 1 1 0 0 0 1 0 1 1 0 0 1 1
-## [36] 1 1 1 1 1 1 1 0 1 0 0 1 0 0 1</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">pred_EST &lt;-<span class="st"> </span><span class="kw">with</span>(testData, <span class="kw">predict</span>(milrFit_EST, X, ID, <span class="dt">type =</span> <span class="st">&quot;bag&quot;</span>))
-<span class="co"># predict(milrFit_EST, testData$X, testData$ID, </span>
-<span class="co">#         type = &quot;instance&quot;) # instance-level prediction</span>
-<span class="kw">table</span>(<span class="dt">DATA =</span> instanceResponseTest, <span class="dt">PRED =</span> pred_EST) </code></pre></div>
+##    0  6  5
+##    1  5 14</code></pre>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1"></a><span class="co"># predict for testing data</span></span>
+<span id="cb18-2"><a href="#cb18-2"></a>testData &lt;-<span class="st"> </span><span class="kw">DGP</span>(numOfBag, numOfInstsInBag, trueCoefs)</span>
+<span id="cb18-3"><a href="#cb18-3"></a><span class="kw">colnames</span>(testData<span class="op">$</span>X) &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;X&quot;</span>, <span class="dv">1</span><span class="op">:</span><span class="kw">ncol</span>(testData<span class="op">$</span>X))</span>
+<span id="cb18-4"><a href="#cb18-4"></a>(instanceResponseTest &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">with</span>(trainData, <span class="kw">tapply</span>(Z, ID, any))))</span></code></pre></div>
+<pre><code>##  [1] 0 1 0 1 0 1 1 1 0 0 1 1 1 0 1 0 1 1 0 0 1 0 1 1 0 1 1 1 1 1</code></pre>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1"></a>pred_EST &lt;-<span class="st"> </span><span class="kw">with</span>(testData, <span class="kw">predict</span>(milrFit_EST, X, ID, <span class="dt">type =</span> <span class="st">&quot;bag&quot;</span>))</span>
+<span id="cb20-2"><a href="#cb20-2"></a><span class="co"># predict(milrFit_EST, testData$X, testData$ID, </span></span>
+<span id="cb20-3"><a href="#cb20-3"></a><span class="co">#         type = &quot;instance&quot;) # instance-level prediction</span></span>
+<span id="cb20-4"><a href="#cb20-4"></a><span class="kw">table</span>(<span class="dt">DATA =</span> instanceResponseTest, <span class="dt">PRED =</span> pred_EST) </span></code></pre></div>
 <pre><code>##     PRED
 ## DATA  0  1
-##    0  6 11
-##    1 13 20</code></pre>
-<p>Next, the <span class="math inline">\(n &lt; p\)</span> cases are considered. We generate a data set with <span class="math inline">\(n=50\)</span> bags, each with 3 instances and <span class="math inline">\(p=100\)</span> covariates. Among these covariates, only the first five of them, <span class="math inline">\(X_1,\ldots,X_5\)</span>, are active and their nonzero coefficients are the same as the previous example. First, we manually specify 50 <span class="math inline">\(\lambda\)</span> values manually from 0.01 to 50. The <code>milr</code> function chooses the best tuning parameter which results in the smallest BIC. For this dataset, the chosen model is a constant model.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">99</span>)
-<span class="co"># Set the new coefficienct vector (large p)</span>
-trueCoefs_Lp &lt;-<span class="st"> </span><span class="kw">c</span>(-<span class="dv">2</span>, -<span class="dv">2</span>, -<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="fl">0.5</span>, <span class="kw">rep</span>(<span class="dv">0</span>, <span class="dv">95</span>))
-<span class="co"># Generate the new training data with large p</span>
-trainData_Lp &lt;-<span class="st"> </span><span class="kw">DGP</span>(numOfBag, numOfInstsInBag, trueCoefs_Lp)
-<span class="kw">colnames</span>(trainData_Lp$X) &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;X&quot;</span>, <span class="dv">1</span>:<span class="kw">ncol</span>(trainData_Lp$X))
-<span class="co"># variable selection by user-defined tuning set</span>
-lambdaSet &lt;-<span class="st"> </span><span class="kw">exp</span>(<span class="kw">seq</span>(<span class="kw">log</span>(<span class="fl">0.01</span>), <span class="kw">log</span>(<span class="dv">50</span>), <span class="dt">length =</span> <span class="dv">50</span>))
-milrFit_VS &lt;-<span class="st"> </span><span class="kw">with</span>(trainData_Lp, <span class="kw">milr</span>(Z, X, ID, <span class="dt">lambda =</span> lambdaSet))
-<span class="co"># grep the active factors and their corresponding coefficients</span>
-<span class="kw">coef</span>(milrFit_VS) %&gt;&gt;%<span class="st"> `</span><span class="dt">[</span><span class="st">`</span>(<span class="kw">abs</span>(.) &gt;<span class="st"> </span><span class="dv">0</span>)</code></pre></div>
-<pre><code>##   intercept          X1          X4         X20         X63         X84 
-## -1.51632737 -1.05288885  1.18563408 -0.04499043  0.16079512 -0.25585103</code></pre>
-<p>Second, we try the auto-tuning feature implemented in <code>milr</code> by assigning <code>lambda = -1</code>. The total number of tuning <span class="math inline">\(\lambda\)</span> values is indicated by setting <code>nlambda</code>. The following example shows the result of the best model chosen among 50 <span class="math inline">\(\lambda\)</span> values. The slice <code>$lambda</code> shows the auto-tuned <span class="math inline">\(\lambda\)</span> candidates and the slice <code>$BIC</code> returns the corresponding value of BIC for every candidate <span class="math inline">\(\lambda\)</span> value. Again, the chosen model is a constant model.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># variable selection using auto-tuning</span>
-milrFit_auto_VS &lt;-<span class="st"> </span><span class="kw">milr</span>(trainData_Lp$Z, trainData_Lp$X, trainData_Lp$ID,
-                        <span class="dt">lambda =</span> -<span class="dv">1</span>, <span class="dt">numLambda =</span> <span class="dv">50</span>) 
-<span class="co"># the auto-selected lambda values</span>
-milrFit_auto_VS$lambda </code></pre></div>
-<pre><code>##  [1]  0.08366600  0.09633265  0.11091697  0.12770929  0.14704389
-##  [6]  0.16930566  0.19493775  0.22445043  0.25843120  0.29755649
-## [11]  0.34260517  0.39447402  0.45419557  0.52295869  0.60213223
-## [16]  0.69329228  0.79825355  0.91910546  1.05825380  1.21846856
-## [21]  1.40293909  1.61533761  1.85989230  2.14147143  2.46568036
-## [26]  2.83897302  3.26878047  3.76365880  4.33345942  4.98952524
-## [31]  5.74491641  6.61467032  7.61610098  8.76914363 10.09675163
-## [36] 11.62535337 13.38537839 15.41186309 17.74514826 20.43168207
-## [41] 23.52494473 27.08651314 31.18728661 35.90889832 41.34534032
-## [46] 47.60483463 54.81198758 63.11027032 72.66487490 83.66600265</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># the values of BIC under each lambda value</span>
-milrFit_auto_VS$BIC</code></pre></div>
-<pre><code>##  [1] 204.39082 169.23484 161.52169 142.07592 138.33626 142.48906 134.91614
-##  [8] 131.26204 127.67262 124.14601 124.59860 117.29284 110.06191 106.83584
-## [15] 107.63389 108.56954 101.70868  83.26213  88.55978  86.33643  80.77398
-## [22]  71.63801  70.10472  68.81315  71.82667  62.77118  61.82642  57.43703
-## [29]  61.35707  56.40626  59.60851  63.82736  65.51461  72.05761  71.21319
-## [36]  71.21319  71.21319  71.21319  71.21319  71.21319  71.21319  71.21319
-## [43]  71.21319  71.21319  71.21319  71.21319  71.21319  71.21319  71.21319
-## [50]  71.21319</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># grep the active factors and their corresponding coefficients</span>
-<span class="kw">coef</span>(milrFit_auto_VS) %&gt;&gt;%<span class="st"> `</span><span class="dt">[</span><span class="st">`</span>(<span class="kw">abs</span>(.) &gt;<span class="st"> </span><span class="dv">0</span>)</code></pre></div>
-<pre><code>##  intercept         X1         X4        X84 
-## -1.3055617 -0.8400178  0.8850002 -0.1157281</code></pre>
-<p>Instead of using BIC, a better way to choose the proper <span class="math inline">\(\lambda\)</span> is using the cross validation by setting <code>lambdaCriterion = &quot;deviance&quot;</code>. The following example shows the best model chosen by minimizing the predictive deviance via ‘bag-wise’ 10-fold cross validation. The results of the predictive deviance for every candidate <span class="math inline">\(\lambda\)</span> can be found in the slice <code>$cv</code>. Twenty-nine covariates were identified including the first four true active covariates, <span class="math inline">\(X_1,\ldots,X_4\)</span>.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># variable selection using auto-tuning with cross validation</span>
-milrFit_auto_CV &lt;-<span class="st"> </span><span class="kw">milr</span>(trainData_Lp$Z, trainData_Lp$X, trainData_Lp$ID,
-                        <span class="dt">lambda =</span> -<span class="dv">1</span>, <span class="dt">numLambda =</span> <span class="dv">50</span>, 
-                        <span class="dt">lambdaCriterion =</span> <span class="st">&quot;deviance&quot;</span>, <span class="dt">nfold =</span> <span class="dv">10</span>) 
-<span class="co"># the values of predictive deviance under each lambda value</span>
-milrFit_auto_CV$cv </code></pre></div>
-<pre><code>##  [1] 6.943834 7.405697 7.534674 7.508246 7.697270 7.806679 7.667741
-##  [8] 7.489969 7.263860 7.040731 6.824969 6.598542 6.391749 6.121951
-## [15] 5.956360 5.850343 5.804736 5.429982 5.333415 4.802979 4.426573
-## [22] 4.252164 3.948187 3.799091 3.763219 3.844775 3.998868 4.224706
-## [29] 4.441538 4.714765 5.069669 5.616141 6.471764 6.732428 6.730117
-## [36] 6.730117 6.730117 6.730117 6.730117 6.730117 6.730117 6.730117
-## [43] 6.730117 6.730117 6.730117 6.730117 6.730117 6.730117 6.730117
-## [50] 6.730117</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># grep the active factors and their corresponding coefficients</span>
-<span class="kw">coef</span>(milrFit_auto_CV) %&gt;&gt;%<span class="st"> `</span><span class="dt">[</span><span class="st">`</span>(<span class="kw">abs</span>(.) &gt;<span class="st"> </span><span class="dv">0</span>)</code></pre></div>
-<pre><code>##     intercept            X1            X4           X20           X29 
-## -1.8280887083 -1.3420366754  1.5776332899 -0.0345905122  0.1278154706 
-##           X63           X65           X74           X84           X95 
-##  0.4075393849  0.0477684451  0.0042718113 -0.4275612105 -0.0062782663 
-##           X96           X97 
-## -0.0006204478  0.1415587818</code></pre>
+##    0  4  7
+##    1  7 12</code></pre>
+<p>Next, the <span class="math inline">\(n &lt; p\)</span> cases are considered. We generate a data set with <span class="math inline">\(n=30\)</span> bags, each with 3 instances and <span class="math inline">\(p=45\)</span> covariates. Among these covariates, only the first five of them, <span class="math inline">\(X_1,\ldots,X_5\)</span>, are active and their nonzero coefficients are the same as the previous example. First, we manually specify 20 <span class="math inline">\(\lambda\)</span> values manually from 0.01 to 20 The <code>milr</code> function chooses the best tuning parameter which results in the smallest BIC. For this dataset, the chosen model is a constant model.</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1"></a><span class="kw">set.seed</span>(<span class="dv">99</span>)</span>
+<span id="cb22-2"><a href="#cb22-2"></a><span class="co"># Set the new coefficienct vector (large p)</span></span>
+<span id="cb22-3"><a href="#cb22-3"></a>trueCoefs_Lp &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="op">-</span><span class="dv">2</span>, <span class="dv">-2</span>, <span class="dv">-1</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="fl">0.5</span>, <span class="kw">rep</span>(<span class="dv">0</span>, <span class="dv">45</span>))</span>
+<span id="cb22-4"><a href="#cb22-4"></a><span class="co"># Generate the new training data with large p</span></span>
+<span id="cb22-5"><a href="#cb22-5"></a>trainData_Lp &lt;-<span class="st"> </span><span class="kw">DGP</span>(numOfBag, numOfInstsInBag, trueCoefs_Lp)</span>
+<span id="cb22-6"><a href="#cb22-6"></a><span class="kw">colnames</span>(trainData_Lp<span class="op">$</span>X) &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;X&quot;</span>, <span class="dv">1</span><span class="op">:</span><span class="kw">ncol</span>(trainData_Lp<span class="op">$</span>X))</span>
+<span id="cb22-7"><a href="#cb22-7"></a><span class="co"># variable selection by user-defined tuning set</span></span>
+<span id="cb22-8"><a href="#cb22-8"></a>lambdaSet &lt;-<span class="st"> </span><span class="kw">exp</span>(<span class="kw">seq</span>(<span class="kw">log</span>(<span class="fl">0.01</span>), <span class="kw">log</span>(<span class="dv">20</span>), <span class="dt">length =</span> <span class="dv">20</span>))</span>
+<span id="cb22-9"><a href="#cb22-9"></a>milrFit_VS &lt;-<span class="st"> </span><span class="kw">with</span>(trainData_Lp, <span class="kw">milr</span>(Z, X, ID, <span class="dt">lambda =</span> lambdaSet))</span>
+<span id="cb22-10"><a href="#cb22-10"></a><span class="co"># grep the active factors and their corresponding coefficients</span></span>
+<span id="cb22-11"><a href="#cb22-11"></a><span class="kw">coef</span>(milrFit_VS) <span class="op">%&gt;&gt;%</span><span class="st"> `</span><span class="dt">[</span><span class="st">`</span>(<span class="kw">abs</span>(.) <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>)</span></code></pre></div>
+<pre><code>##  intercept 
+## -0.7056211</code></pre>
+<p>Second, we try the auto-tuning feature implemented in <code>milr</code> by assigning <code>lambda = -1</code>. The total number of tuning <span class="math inline">\(\lambda\)</span> values is indicated by setting <code>nlambda</code>. The following example shows the result of the best model chosen among 5 <span class="math inline">\(\lambda\)</span> values. The slice <code>$lambda</code> shows the auto-tuned <span class="math inline">\(\lambda\)</span> candidates and the slice <code>$BIC</code> returns the corresponding value of BIC for every candidate <span class="math inline">\(\lambda\)</span> value. Again, the chosen model is a constant model.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a><span class="co"># variable selection using auto-tuning</span></span>
+<span id="cb24-2"><a href="#cb24-2"></a>milrFit_auto_VS &lt;-<span class="st"> </span><span class="kw">milr</span>(trainData_Lp<span class="op">$</span>Z, trainData_Lp<span class="op">$</span>X, trainData_Lp<span class="op">$</span>ID,</span>
+<span id="cb24-3"><a href="#cb24-3"></a>                        <span class="dt">lambda =</span> <span class="dv">-1</span>, <span class="dt">numLambda =</span> <span class="dv">5</span>) </span>
+<span id="cb24-4"><a href="#cb24-4"></a><span class="co"># the auto-selected lambda values</span></span>
+<span id="cb24-5"><a href="#cb24-5"></a>milrFit_auto_VS<span class="op">$</span>lambda </span></code></pre></div>
+<pre><code>## [1]  0.04516636  0.25398910  1.42828569  8.03184065 45.16635916</code></pre>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1"></a><span class="co"># the values of BIC under each lambda value</span></span>
+<span id="cb26-2"><a href="#cb26-2"></a>milrFit_auto_VS<span class="op">$</span>BIC</span></code></pre></div>
+<pre><code>## [1] 109.27500  66.61280  49.09209  40.05306  40.05306</code></pre>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1"></a><span class="co"># grep the active factors and their corresponding coefficients</span></span>
+<span id="cb28-2"><a href="#cb28-2"></a><span class="kw">coef</span>(milrFit_auto_VS) <span class="op">%&gt;&gt;%</span><span class="st"> `</span><span class="dt">[</span><span class="st">`</span>(<span class="kw">abs</span>(.) <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>)</span></code></pre></div>
+<pre><code>##  intercept 
+## -0.7056231</code></pre>
+<p>Instead of using BIC, a better way to choose the proper <span class="math inline">\(\lambda\)</span> is using the cross validation by setting <code>lambdaCriterion = &quot;deviance&quot;</code>. The following example shows the best model chosen by minimizing the predictive deviance via ‘bag-wise’ 3-fold cross validation. The results of the predictive deviance for every candidate <span class="math inline">\(\lambda\)</span> can be found in the slice <code>$cv</code>. Twenty-nine covariates were identified including the first four true active covariates, <span class="math inline">\(X_1,\ldots,X_4\)</span>.</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1"></a><span class="co"># variable selection using auto-tuning with cross validation</span></span>
+<span id="cb30-2"><a href="#cb30-2"></a>milrFit_auto_CV &lt;-<span class="st"> </span><span class="kw">milr</span>(trainData_Lp<span class="op">$</span>Z, trainData_Lp<span class="op">$</span>X, trainData_Lp<span class="op">$</span>ID,</span>
+<span id="cb30-3"><a href="#cb30-3"></a>                        <span class="dt">lambda =</span> <span class="dv">-1</span>, <span class="dt">numLambda =</span> <span class="dv">5</span>, </span>
+<span id="cb30-4"><a href="#cb30-4"></a>                        <span class="dt">lambdaCriterion =</span> <span class="st">&quot;deviance&quot;</span>, <span class="dt">nfold =</span> <span class="dv">3</span>) </span>
+<span id="cb30-5"><a href="#cb30-5"></a><span class="co"># the values of predictive deviance under each lambda value</span></span>
+<span id="cb30-6"><a href="#cb30-6"></a>milrFit_auto_CV<span class="op">$</span>cv </span></code></pre></div>
+<pre><code>## [1] 16.07815 17.03320 13.58422 12.21729 12.21729</code></pre>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1"></a><span class="co"># grep the active factors and their corresponding coefficients</span></span>
+<span id="cb32-2"><a href="#cb32-2"></a><span class="kw">coef</span>(milrFit_auto_CV) <span class="op">%&gt;&gt;%</span><span class="st"> `</span><span class="dt">[</span><span class="st">`</span>(<span class="kw">abs</span>(.) <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>)</span></code></pre></div>
+<pre><code>##  intercept 
+## -0.7056231</code></pre>
 <p>According to another simulation study which is not shown in this paper, in contrast to cross-validation, BIC does not perform well for variable selection in terms of multiple-instance logistic regressions. However, it can be an alternative when performing cross-validation is too time consuming.</p>
 </div>
 <div id="real-case-study" class="section level2">
 <h2><span class="header-section-number">4.2</span> Real case study</h2>
 <p>Hereafter, we denote the proposed method with the lasso penalty by MILR-LASSO for brevity. In the following, we demonstrate the usage of MILR-LASSO and the <code>softmax</code> approach on a real dataset, called MUSK1. The MUSK1 data set consists of 92 molecules (bags) of which 47 are classified as having a musky smell and 45 are classified to be non-musks. The molecules are musky if at least one of their conformers (instances) were responsible for the musky smell. However, knowledge about which conformers are responsible for the musky smell is unknown. There are 166 features that describe the shape, or conformation, of the molecules. The goal is to predict whether a new molecules is musk or non-musk. This dataset is one of the popular benchmark datasets in the field of multiple-instance learning research and one can download the dataset from the following weblink.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">dataName &lt;-<span class="st"> &quot;MIL-Data-2002-Musk-Corel-Trec9.tgz&quot;</span>
-dataUrl &lt;-<span class="st"> &quot;http://www.cs.columbia.edu/~andrews/mil/data/&quot;</span></code></pre></div>
-<p>We use the <code>untar</code> function to decompress the downloaded  file and extract the <code>MUSK1</code> dataset. Then, with the following data preprocessing, we reassemble the <code>MUSK1</code> dataset in a <code>&quot;data.frame&quot;</code> format. The first 2 columns of the <code>MUSK1</code> dataset are the bag indices and the bag-level labels of each observation. Starting with the third column, there are <span class="math inline">\(p=166\)</span> covariates involved in the <code>MUSK1</code> dataset.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">filePath &lt;-<span class="st"> </span><span class="kw">file.path</span>(<span class="kw">getwd</span>(), dataName)
-<span class="co"># Download MIL data sets from the url</span>
-if (!<span class="kw">file.exists</span>(filePath))
-  <span class="kw">download.file</span>(<span class="kw">paste0</span>(dataUrl, dataName), filePath)
-<span class="co"># Extract MUSK1 data file</span>
-if (!<span class="kw">dir.exists</span>(<span class="st">&quot;MilData&quot;</span>))
-  <span class="kw">untar</span>(filePath, <span class="dt">files =</span> <span class="st">&quot;MilData/Musk/musk1norm.svm&quot;</span>)
-<span class="co"># Read and Preprocess MUSK1</span>
-<span class="kw">library</span>(data.table)
-MUSK1 &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="st">&quot;MilData/Musk/musk1norm.svm&quot;</span>, <span class="dt">header =</span> <span class="ot">FALSE</span>) %&gt;&gt;%
-<span class="st">  `</span><span class="dt">[</span><span class="st">`</span>(<span class="dt">j =</span> <span class="kw">lapply</span>(.SD, function(x) <span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">d+:(.*)&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1&quot;</span>, x))) %&gt;&gt;%
-<span class="st">  `</span><span class="dt">[</span><span class="st">`</span>(<span class="dt">j =</span> <span class="kw">c</span>(<span class="st">&quot;bag&quot;</span>, <span class="st">&quot;label&quot;</span>) :<span class="er">=</span><span class="st"> </span><span class="kw">tstrsplit</span>(V1, <span class="st">&quot;:&quot;</span>)) %&gt;&gt;%
-<span class="st">  `</span><span class="dt">[</span><span class="st">`</span>(<span class="dt">j =</span> V1 :<span class="er">=</span><span class="st"> </span><span class="ot">NULL</span>) %&gt;&gt;%<span class="st"> `</span><span class="dt">[</span><span class="st">`</span>(<span class="dt">j =</span> <span class="kw">lapply</span>(.SD, as.numeric)) %&gt;&gt;%
-<span class="st">  `</span><span class="dt">[</span><span class="st">`</span>(<span class="dt">j =</span> <span class="st">`</span><span class="dt">:=</span><span class="st">`</span>(<span class="dt">bag =</span> bag +<span class="st"> </span><span class="dv">1</span>, <span class="dt">label =</span> (label +<span class="st"> </span><span class="dv">1</span>)/<span class="dv">2</span>)) %&gt;&gt;%
-<span class="st">  </span><span class="kw">setnames</span>(<span class="kw">paste0</span>(<span class="st">&quot;V&quot;</span>, <span class="dv">2</span>:(<span class="kw">ncol</span>(.)-<span class="dv">1</span>)), <span class="kw">paste0</span>(<span class="st">&quot;V&quot;</span>, <span class="dv">1</span>:(<span class="kw">ncol</span>(.)-<span class="dv">2</span>))) %&gt;&gt;%
-<span class="st">  `</span><span class="dt">[</span><span class="st">`</span>(<span class="dt">j =</span> <span class="kw">paste0</span>(<span class="st">&quot;V&quot;</span>, <span class="dv">1</span>:(<span class="kw">ncol</span>(.)-<span class="dv">2</span>)) :<span class="er">=</span><span class="st"> </span><span class="kw">lapply</span>(.SD, scale), 
-       <span class="dt">.SDcols =</span> <span class="kw">paste0</span>(<span class="st">&quot;V&quot;</span>, <span class="dv">1</span>:(<span class="kw">ncol</span>(.)-<span class="dv">2</span>)))
-X &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;V&quot;</span>, <span class="dv">1</span>:(<span class="kw">ncol</span>(MUSK1) -<span class="st"> </span><span class="dv">2</span>), <span class="dt">collapse =</span> <span class="st">&quot;+&quot;</span>) %&gt;&gt;%<span class="st"> </span>
-<span class="st">  </span>(<span class="kw">paste</span>(<span class="st">&quot;~&quot;</span>, .)) %&gt;&gt;%<span class="st"> </span>as.formula %&gt;&gt;%<span class="st"> </span><span class="kw">model.matrix</span>(MUSK1) %&gt;&gt;%<span class="st"> `</span><span class="dt">[</span><span class="st">`</span>( , -1L)
-Y &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">with</span>(MUSK1, <span class="kw">tapply</span>(label, bag, function(x) <span class="kw">sum</span>(x) &gt;<span class="st"> </span><span class="dv">0</span>)))</code></pre></div>
-<p>To fit an MIL model without variable selection, the <strong>milr</strong> package provides two functions. The first is the <code>milr</code> function with <code>lambda = 0</code>. The second approach is the <code>softmax</code> function with a specific value of <code>alpha</code>. Here, we apply the approaches that have been introduced in <span class="citation">X. Xu and Frank (2004)</span> and <span class="citation">S. Ray and Craven (2005)</span>, called the <span class="math inline">\(s(0)\)</span> (<code>alpha=0</code>) and <span class="math inline">\(s(3)\)</span> (<code>alpha=3</code>) methods, respectively. The optimization method in <code>softmax</code> is chosen as the default settings of the generic function <code>optim</code>, that is, the  method.</p>
-<p>As suggested by one reviewer, it is relevant to compare the computational efficiencies and convergence rates of the <code>milr</code> and <code>softmax</code> functions implemented in this package. Note that, the <code>milr</code> approach is written in C++ and so is the objective function in <code>softmax</code>, and, we only consider their performance affected by their common tuning parameter, <code>maxit</code>, the total number of iterations. For each approach, the total number of iterations are set from 5,000 to 25,000, and, the computation task was performed by a laptop with Intel Core M-5Y71 CPU 1.4 GHz and 8GB RAM. Moreover, the performance in model fitting is assessed based on the classification accuracy. We use the generic function <code>table</code> to produce the contingency tables and calculate the classification accuracy values accordingly.</p>
-<p>The left panel of Figure 1 shows the computational cost of each approach along with the increment of the total number of iterations. As expected, the computational cost increases with the number of iterations linearly for both functions. However, the slope for the <code>milr</code> function is much flatter than the slope for the <code>softmax</code> function. A further result of MILR not shown here suggests that, for this dataset, the coefficient estimate of the MILR approach converges between 15,000 and 16,000 iterations. The resulting accuracy of each model is shown in the right panel of Figure 1 which indicates that the MILR approach requires fewer iterations to achieve the best fit.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># set the iterations from 5000 to 25000</span>
-itSet &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">5000</span>, <span class="dv">20000</span>, <span class="dv">3000</span>)
-outDT &lt;-<span class="st"> </span><span class="kw">data.table</span>(<span class="dt">iteration =</span> <span class="kw">rep</span>(itSet, <span class="dt">each =</span> <span class="dv">3</span>), 
-                    <span class="dt">method =</span> <span class="kw">rep</span>(<span class="kw">c</span>(<span class="st">&quot;s_0&quot;</span>, <span class="st">&quot;s_3&quot;</span>, <span class="st">&quot;milr&quot;</span>), <span class="kw">length</span>(itSet)), 
-                    <span class="dt">time =</span> <span class="ot">NA_real_</span>, <span class="dt">acc =</span> <span class="ot">NA_real_</span>)
-zzz &lt;-<span class="st"> </span><span class="kw">sapply</span>(<span class="kw">seq</span>(1L, <span class="kw">nrow</span>(outDT), 3L), function(i){
-  j &lt;-<span class="st"> </span>(i<span class="dv">-1</span>)/<span class="dv">3</span> +<span class="st"> </span><span class="dv">1</span>
-  <span class="co"># record the computation time</span>
-    tmp &lt;-<span class="st"> </span><span class="kw">system.time</span>(
-        softmaxFit_0 &lt;-<span class="st"> </span><span class="kw">softmax</span>(MUSK1$label, X, MUSK1$bag, <span class="dt">alpha =</span> <span class="dv">0</span>, 
-                                <span class="dt">control =</span> <span class="kw">list</span>(<span class="dt">maxit =</span> itSet[j])) 
-    )[<span class="dv">3</span>]
-    <span class="kw">set</span>(outDT, i, 3L, tmp)
-    tmp &lt;-<span class="st"> </span><span class="kw">system.time</span>(
-        softmaxFit_3 &lt;-<span class="st"> </span><span class="kw">softmax</span>(MUSK1$label, X, MUSK1$bag, <span class="dt">alpha =</span> <span class="dv">3</span>, 
-                                <span class="dt">control =</span> <span class="kw">list</span>(<span class="dt">maxit =</span> itSet[j])) 
-    )[<span class="dv">3</span>]
-    <span class="kw">set</span>(outDT, i +<span class="st"> </span>1L, 3L, tmp)
-    tmp &lt;-<span class="st"> </span><span class="kw">system.time</span>(
-      <span class="co"># use a very small lambda so that milr do the estimation </span>
-      <span class="co"># without evaluating the Hessian matrix</span>
-        milrFit &lt;-<span class="st"> </span><span class="kw">milr</span>(MUSK1$label, X, MUSK1$bag, <span class="dt">lambda =</span> <span class="fl">1e-7</span>, <span class="dt">maxit =</span> itSet[j]) 
-    )[<span class="dv">3</span>]
-    <span class="kw">set</span>(outDT, i +<span class="st"> </span>2L, 3L, tmp)
-    <span class="co"># calculate the accuracy</span>
-  tmp &lt;-<span class="st"> </span><span class="kw">table</span>(<span class="dt">DATA =</span> Y, <span class="dt">FIT_s0 =</span> <span class="kw">fitted</span>(softmaxFit_0, <span class="dt">type =</span> <span class="st">&quot;bag&quot;</span>)) 
-  <span class="kw">set</span>(outDT, i, 4L, <span class="kw">sum</span>(<span class="kw">diag</span>(tmp))/<span class="kw">sum</span>(tmp))
-    tmp &lt;-<span class="st"> </span><span class="kw">table</span>(<span class="dt">DATA =</span> Y, <span class="dt">FIT_s3 =</span> <span class="kw">fitted</span>(softmaxFit_3, <span class="dt">type =</span> <span class="st">&quot;bag&quot;</span>)) 
-    <span class="kw">set</span>(outDT, i +<span class="st"> </span>1L, 4L, <span class="kw">sum</span>(<span class="kw">diag</span>(tmp))/<span class="kw">sum</span>(tmp))
-    tmp &lt;-<span class="st"> </span><span class="kw">table</span>(<span class="dt">DATA =</span> Y, <span class="dt">FIT_MILR =</span> <span class="kw">fitted</span>(milrFit, <span class="dt">type =</span> <span class="st">&quot;bag&quot;</span>))
-    <span class="kw">set</span>(outDT, i +<span class="st"> </span>2L, 4L, <span class="kw">sum</span>(<span class="kw">diag</span>(tmp))/<span class="kw">sum</span>(tmp))
-    <span class="kw">invisible</span>(<span class="ot">NULL</span>)
-})
-outDT[ , <span class="st">`</span><span class="dt">:=</span><span class="st">`</span>(<span class="dt">iteration =</span> iteration /<span class="st"> </span><span class="dv">1000</span>, <span class="dt">acc =</span> acc *<span class="st"> </span><span class="dv">100</span>)]
-<span class="kw">library</span>(plyr)
-outDT2 &lt;-<span class="st"> </span><span class="kw">melt</span>(outDT, <span class="dv">1</span>:<span class="dv">2</span>, <span class="dv">3</span>:<span class="dv">4</span>) %&gt;&gt;%
-<span class="st">  `</span><span class="dt">[</span><span class="st">`</span>(<span class="dt">j =</span> variable :<span class="er">=</span><span class="st"> </span><span class="kw">mapvalues</span>(variable, <span class="kw">c</span>(<span class="st">&quot;time&quot;</span>, <span class="st">&quot;acc&quot;</span>), 
-                                <span class="kw">c</span>(<span class="st">&quot;CPU Time (sec)&quot;</span>, <span class="st">&quot;Accuracy (%)&quot;</span>)))</code></pre></div>
-<div class="figure">
-<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAqAAAAGACAMAAABFpiBcAAABTVBMVEUAAAAAADoAAGYAOjoAOmYAOpAAZrYAujgZGUgZGXEZSJcZcboaGhozMzM6AAA6ADo6AGY6Ojo6OmY6OpA6ZmY6kLY6kNtIGRlIGUhIGXFISJdIl91NTU1NTW5NTY5NbqtNjshhnP9mAABmADpmAGZmOgBmtv9uTU1uTW5uTY5ubqtuq8huq+RxGRlxGUhxGXFxSJdxcbpxuv+OTU2OTW6OTY6OyP+QOgCQOjqQkDqQkGaQtpCQ27aQ2/+XSBmXSEiXSHGX3f+rbk2rbm6rbo6ryKur5P+2ZgC225C22/+2/7a2/9u2//+6cRm6cXG6/7q6///Ijk3I///bkDrbtmbb/7bb/9vb///dl0jd/7rd///kq27k///r6+vy8vL4dm3/tmb/unH/yI7/25D/27b/29v/3Zf/5Kv//7b//7r//8j//9v//93//+T///9EfKx2AAAACXBIWXMAAA7DAAAOwwHHb6hkAAAgAElEQVR4nO2de3sct3XGl2rETROZctuUaZOl5VEayhc5biObbJPKbWSbbFqltcQ2UkMxS3FTk6LM+f5/FsDcgBlgcAAczGJmz/tY3PXu2TPAyx9x2xnMLCeREtZs3QUgkfpEgJKSFgFKSloEKClpEaCkpEWAkpIWAUpKWgQoKWmNENCr+7NSt56+Pbz9whh4zGP2+bOTIn7rMX9+62mZZtcxX7/eHm6Xz07UdKt32QHFD+MnmM6LkpJami6gq50iiENQIcMhGBxQccDqqPpP8Oez7U4AaZSAclUgmYFi2G0XDw2U57OKl1wCtD+PQ5FqQFUYQYCudv5CtO+klsYP6P+wBlCgxlvCBoOT4kX2m5egPGaPvYDyx9XO7jlPyX6IF9W8/GVxQBb637Py0Oy1W/+hAZTF/P6QBf31YRHZpFI/wT/zbzu7Vf4C1fJJUTQOM/t3wl+qSlCHnIgPKCOGyWj0gH7v52XXfd4MM8UbcpPlCOiP2Ohg69c7xfhAzVv13/u8U65HDfzxez+3Atqkan2CFWa7LPGJEsKeyID+2Q77mzlRj8tCVoLtaY5iRw8ob+XOZ/y3x38/q53yd85+41J43cVva8agaj4OKMsk2lDe+rbyFhjx/y1GjSfsx9V9wdGsNQZlgeoYtEnV/oSASwD29lA0kbvykwbQouVuSqCEHGtGEePX6AHlvxVOY9GKSPgpgM6aaTwA0G3+Lnuh7PDlvMUnZ+IvQj10zbAR0CZV+xMilyhyGSM9kQGtClGUoA4Rfbxa48lo9IBWv71zicHcAGjRhwLGoNXnj2+/aOWtFge2lUPv5/pJkgpok6r9iTKp6K33q5f25aIVgIpC1iWoQ0RdptnDTxbQprXhrYvc/p2UEU37kzsAytuuffEuJqDH5Tu7AECbEjSA8oJOs4efDqDSb0uomsVf3ZcmRlzn5RsncotjBrSVt/jfYgTYHHo3l9tsE6BNqtYnxHiiKGq3iy/Gls2fRFMC6U/sfOuf5Q5hQpoMoGLGoA7TynXQXXUEKeZAnFN53dEMaCtvOUCd8TeqQ4u1VnmS1AK0WglqUrU+UfXO7G9GxHBg6yeseS1jK0CbElQh7OeP7k5zGXUygFYdaN2OKN8kKWtOs1Zk3gdoK2+1uCQDWoQYlple8OPtFj+aVMonFPrPqzUk9QmPrY5YlaAJ4YOE4G8a0tR0AC2IVLrt+tenfo8jAtXvbXoAbeXlQ8Ctx8fVt6L1oU0L9S+K1k78kFLJn5B683IZXoTUTxjct3/fTJLqEkgh6oh6ShopoKSWTram2cMToNNQOc2aoAjQCahYeZqmCNAJqPgOdJoiQElJiwAlJS0ClJS0CFBS0iJASUmLACUlLQKUlLS8AT2rJT01yR6SZBI0l+MVMWqIUxI0s1QRoD0RaC7HK2LUEAI08SRoLscrYtQQAjTxJGguxyti1BACNPEkaC7HK2LUEAI08SRoLscrYtQQAjTxJGguxyti1BACNPEkaC7HK2LUEAI08SRoLscrYtQQAjTxJGguxyti1BACNMEkWZY1wSBdfvg8z68fLe69qh9y+Zls1nK5BBaxL1KphD5QV89WpNmKKtDup5TSFySLCFBVWSYRCjLiYvHe8/zmyUF++n71wNQ8k81aLgGE5tZIuRKGQE0925FGK+pAq59ySl+QLCJAFWWZTCjEh2d7X7MW9Prz57wlLR/Yy80zyazlEkJobo2UKmEK7NazE2myogm0+amk9AXJIgJUkTugRRd/+dGr/Pqzo/KBv1g/e4epjFxOU74IgUSAKvIF9OKe4LF8YC82zySzyl8ooIj9kdSCAmSvaK9d7hGpjkFtLahsFoRPGoMqIkBVZX6zeNgYlGbx7iJAVWXu66Ccw5snD4tZ/MN6Fv9QM4tPp574x/EFySICVFHmsVDfXQcVbap2HTSVekY4ji9IFhGginwAHalZBGg8L6Ilyc4IUN8kaGapIkBlEaD+SdDMUkWASspaEWgu4xURLwkBGs+LWEkI0IAkaGapIkAbZe0INJfRioiYhACN50WkJARoSBI0s1QRoLWyTgSay1hFxExCgMbzIk4SAjQoCZpZqgjQSlk3As1lpCKiJiFA43kRJQkBGpYEzSxVBGipTBOB5jJOEXGTEKDxvIiRhAANTIJmlirawLZQFjX7OsEZ6jiRrKMWtFCmi0BzGaWIyEkI0Hhe4CfJtBFoLmMU0SmCAE3ScwJ0jcdBM0sVAcqV6SPQXEYoolsEAZqk5wToGo+DZpYqAvRM5ZMA9UyCZpYqAvSMAEVJgmaWKgK0xScB6pkEzSxVBCgBipMEzSxVBGiLzyiAkrxFgA4BaGgRnSOoBU3Sc68kmTkCzeXAIrpHEKBJek6ArvE4aGap2nhA23wSoJ5J0MxSRYD2RKC5HFZEjwgCNEnPPZJ0+CRAPZOgmaWKAO2JQHM5qIg+EQRokp67J+nySYB6JkEzSxUB2hOB5nJIEb0iCNAkPXdOouGTAPVMgmaWKgK0JwLN5YAi+kUQoEl67ppExycB6pkEzSxVBGhPBJrL/kX0jCBAk/TcMYmWTwLUMwmaWaoI0J4INJe9i+gbQYAm6blbEj2fBKhnEjSzVBGgPRFoLvsW0TuCAE3Sc6ckBj4JUM8kaGapIkB7kqC57FlE/wgCNEnPXZKY+CRAPZOgmaWKAO1JguayXxEDIgjQJD13SGLkkwD1TIJmlioCtCcJmsteRQyJIECT9ByexMwnAeqZBM0sVQRoTxI0l32KGBRBgCbpOThJD5+egF4+WLz3PD9dcB3wF/hT9kq6ZhGg8bwIToIO6PWjg/z03iv+9KJ4eHaQuFkEaDwvQpP08ekH6OVHr/Lrz47Ys+JnfvPlUeJmEaDxvAhNEhPQ0/fFC9ePqr7+HSZfk0lQQC8/fD6CYRUwSS+fAV383lHdgOaXHxxJrahzEUMjNq0FvRBgJj+sWh+gfJL0MeexHIEWqg1zLmJoxIYB+mzva9aCpj+sgiXp59N/men6c/5H/FD2jQANlkMXP5VhVYy7HvKenY8+6z9i3pLefJXyeGh6gKY/rAIlsTSgni3oxWLBO/diCMrdYgP2vbrHcSxieMRGAiqUdK+1RkD75VjE8AgCNEnPeyLm83kRYuOzChTBWHKpBAGqyAHQ9IdV5oj5vATPBmgdKIKx5FIJAlSR4zpo2sMqY8R8XoEH4bMmFM3loeq5zuOgmaVqM75JmtfK5hBV+bA0VD3XeRw0s1RtFKCsAbUkIUC9k6CZpWozAK2HljZAaQzqnQTNLFUbBOgZH4Fak9As3jMJmlmqNgXQ4gEAKK2DeiZBM0vVZgBa80mARjsOmlmqNgLQqtMmQCMeB80sVZsEaOaaBM1ll0oQoIo2AVCpASVAox0HzSxVGwRo5pwEzWWXShCgijYAUMFnxuScBM1ll0oQoIqmD2jNJwEa9ThoZqnaDECzrCKUAI11HDSzVE0e0KYBJUCjHgfNLFUEaE8SNJddKkGAKpo6oNUMnsagsY+DZpaqDQLUPQmayy6VIEAVTRxQeQnUPQmayy6VIEAVTRvQDp8EaLTjoJmlahMAzfpC+pJgGk3y06QB7fJJLWi046CZpWr6gGa9Ib1J0Fx2OT4BqmjKgGoaUAI02nHQzFI1YUB1fBKg0Y6DZpaqqQPa3qiBAI11HDSzVE0XUC2fBGi046CZpWragHY3uiFAYx0HzSxVkwXUsBETARrrOGhmqZoqoPoOngCNdxw0s1RpAH19h+uXlg+u0wtAhGknOwI01nHQzFLVAfT1nR/yh+++sCC6Ti/sEcadFglQQAj81K8q8szRrD/9Nl/dfdx9/fzW09YrbUDf/P0fqqf/+c3YPFcA1e8ESoDaQ+Anz9aRZ25mcTg9AR2153WEkU8C1B4Cv/ygiTwbEtDXrHN/+f3fjNDzKqJnK2UC1BqSuapMp9fq7q93ZrPdFfuxn+dvD2ezW09X4pW7v5rVr22zyKv7s61fAQB98wvO5rd/29vBp+m5BKhpq28C1BqC24Kudm6/yE9m/Metp28PGYknt1+IFnSneY3/u7q/y/4BAP3uCz47ev2DP3TeSd7zMqKHTwLUGiJRhzEGXe3sVz/uPhY9+NX9/QJQ6TX2QzyeQLr4N5/cuXPnzy0NaJKe14Cab5UQCChsCW4UZhlCuHWYs3gx1Kx+nMyEdusxKAeUNaTiPfH4LtokKV3No9zskAu6BNcRAjhuEb4hmePZ3fZ1UBVQDmEuTZIiAhrshWsEOMm871YzIS0oeAluFGZpQjLncxMdAT3fely/qLxWdfGgWTxrIH7wv78Y7Sy+r4OnMWhfiMepX46Avj1kzSQjkg1DpdeqSdI2dJL0029/8ofRTpL6+QwHlI/QJzkGbTefrkkMVVcAFUtKvMU8nm0rrzktM336DQOU/Ryf5wLQ/nvJBQP68pf5d//q1sGnaVYrxO/EBTugoTK1oC9H2oJa+Awbg/JxzzQB1TSfrkkcLYFKPwa9c8fGZ5Ke59Z7cYa1oMyZn06xi9fjmSygMHlWwz8ClMTGZ3AX/7JYaZqAWU1IwLcaBKhbElsHHwjoa/4Fxmtt73L5YPFecUNo8Zjn148W916lbFYVYmo+XY/jC5JFGkDZ8PPlSE9YtvIZvA76+qfa8xSuHx3kpwzIZwflCzdP2Avvp2xWEdKDJxKgf9TKQlcj7cki7L9Rnixi5xMFUI0uP3qVX392dPPlUfnC9efP88sPnydslggJXfJYC6CffsPa0DECms1tERhdvNaNElDWry8WB9IL7Nk7TOBfx7DKYn0nLAsdUDYP+P5vXo+wi8/m2CWB/xZEF793dPnBUV60ohf3KkDTNOvM0ru7H8dkDT6gMHlWA8ULvSC3Mg7r4v+hftr5Lp5Nkj4u+3cxDm1a0DTNYnYhH8cECjKgfb8ERZ7VQPFCK9bBx25B+89m4sNOLgFo6mPQzPHO5PYQEyjYLehYr+rkA9D4XbzpfFDeWLJJO+/Yb77iWN48eZjyLN75hif2EBMo+F38KK+Lz84GAdSoi4VY9jxdLPaORNOZ8jqoxw1P7CEmZ2gMyiX4XCegIzKrvogI9zimutdMLpdLE6Crd592T1UuNA1ACz43E9D5XLe6pktSXJ+R9YW4lsQB0OVSJrQTRoB6lMTXmyHNms+1hGqSKNdgOh/HGmKqu8xnQyh74+0//mo22z1n/8oWdPWXP++cDjoNQEs+NxHQ+VxPaDdJm8/BAF12VAJ6uJ2vdrYrOtl//DrPtqYAaHY2FKBvPvE5l2kAQGFaD6DmFvSx+Hf1s8c1o92PT+CapJrPIVrQ13fuWDddGdKsEbSgpjGoL6BjuyaJWz4coHlxQnc6lx07jkG9j2MNMdXdOIv3BXRM1ySVls/NEUEl0VT72x/zFtTqznBm6fnsMcvzONYQU92N66BhLegorkkq24S5OSKsJJ1Kv/nEeinMwGaZTuDSmBV0HHuIqe7ogI7nmqRqVDUcoL5yOb5TEY0nGHbNCjoOIMRUdyOgMI15Fl8COjdHBJakW2vY1pSDmWU+AbadJHS7fnuIqe74gBbfxdt2D/OsBooX6h6WAwIK3JpyKLN6TtBuJQnert8eYqo7OqBvrCtMMT23hsiLJS0+4wMK3JpyKLPAgIZv128PMdUdH1DYDNWzGgFetNfxipfkX1L8Lh62NeVAZvVd4TJhQPOX+uvCBvG8kIZDJk2S1hrLZk2Seq/AUv0MOg4wBM0sVdprktY8Bm134sbTw9qL1BsFaP8VgoqfQceBhpjqPr0xaHd/fkOSztd88QGF/fEOYZblClbZz6DjgENMdZ/eGFTDpj7J8ICyP97XP8xfOp8xEqGIYEBxtuu3h5jqPr0xaMqAfvpN8R/Y31hm2bYAqJMgbddvDzHVHb8F/SShMWh/ksHHoN/9y2/Yfwmsg1q3qJgwoOvyvJGez04SxmbrRIn4Y1DG5us7d0BdTEyz7FuoVEl6NmcgQD29AA7qYeeYBZXE15vYZsG3+EHbrt8eYqo7MqBvPv2vNXfxwEE99EqxgJJox6BgZyOaBQYUb7t+e4ip7sO0oGKTjEEu9QaOmbS/oyHGoGBn42kODRxibzCraibZeKwP0Kv7s/IuSoq6Laiujbjgu7IOs+UlDFB9GxK/BYX1Lh2hFhG+xQ/i/STsIaa6S3xKhHbC3h7u5yfb3Y+DAH229zXfK2OI7YZgg3pDH7cRY1D4DiqY95Owh5jqLvPZEMrfOed3Pq7Crv7uqfbaeFgLKsAcYstLUKc0B/dxqcjzd64TfAcV1PtJ2ENMda/QlFQAypFs2szVX73g59Z3Pt4BtOjE2t0YB3SALS9Bg3r4WboBJSmetpVAFw8GFHe7fnuIqe7GFlTFkd+yEwQopAVF9ryJgAAKP0s3pCTFU71gX7XJwisieAcV5O367SGmupvHoKud2VZNJLgFNQMafwwKGdTDT4IMKUn5VK81ftUJ3qACe7t+e4ip7r2z+PN64o4wBo2+5SVkUA8/CTKkJNVTvV6vrYuHX/+fIKDtdVAOZwPo28Nd0CzeoCHWQSGDevhJkCElqZ+2VY5B13WnOfj1/4D9vdcOaH4sz+Kh66BDey5F2AHVblHgdJhRLzPBL6/G367fHmKquxlQkNIB1D7rhJ/CE1aS5imWcIoIBjTDt8IeYqq7BVA2U+La6k6PCiUDqH3QBD+FJ6wk0tOO1nldPPjyatgG9IkAapNpHdR60rhnNUwC8IlsKCCiU+l1XhcPPjEbuAH9SAEt9d0XtrU+z2qYZAUU8g10dEDXeF08/MTsjQA0//Yng24eZpt1zkHfQMfv4td2XTz8xOws6DiOEQBAA2UCdNjtF22zTuD3JxOeJIEBBd/Cg1pQeE1ts07o9yfTBXRujSiV2UPgRUkY0GHHoBZAwd+fTHYWP7dGlHK4x8xIAV3HLN6yLAL//mSqs/j2AtsmAzqU55Iss06H7WknOovvLAAbk7jcBIkABda0f9Y5By9Ph5ekE9Gt9Vpm8WBAnW7hMVZAv/0x7GQILC/6Z51u2zJMc5IEuceMkNstPEYKKO/EQGMsLC96AXXclmGSgIKv/3e8hcdIAeXrn6CLa5G86F0WAS+uYJREE6Gv+ctBL/kAX/+f2UMAWfyTmOpeM5llWR+gyiV0jbSAfgHo43G86J11ghdXMEqii9BUe+g7zcGv/08dULHjlhlQfjY99LLj4QDtnXXCF1cQSqKNaNdZ3MXrd86nKw8CaGYPAWQJSGKqu8xnQyh/p9Nmgi750F/Viem5JAOgc7EvGDQJSkm0EW1vxNe/ekAvH/C9LfjD4kC8cLpYiFfCzAJvUNE+2SYhQLOO/qi57Jgr4JKPrjC8MCyLwG8/6RwR1oLyv95fagG9fnSQn957xS96vfxAXPj67ADBLPAGFR63kVt7C9q+hnO1oztreZ2AGpZF4DfwdY8InyT9TjsGLS/JvuDXFAo0b748kt72LCL4Poc+t5Fb/xhUueyYC3LZMfsN/JA3FdaBVrgXpmWRtAHlK3Hd4Y+0Z0DxcP1oUXb2ntuwcAtAgeIGKAmrdxZ/rl4nd7zf+XgH0OIusm8+iX+yyFgB1Ul08XucTH5xNhPv6JtW1L2IhmFONwl4O2qPkLjroOplx+CdRcp7fMQ/3c64LGLgM2lA+ezoY87j9aOHzYv1ONS5iKY/0k4S8Ib+vVm8I4IW6tXLjk/0V86ZNm6IfsKycVlkftbe2Rt8nDUCyiR2Xnkgz40I0DzKV51c1jN2Ar0wLYv0XPqeMqB84Hn6vsQn32nt5ivvZabNAdT5suNv/0ac8vhj2ywp0AsDoGE7L62xBb1Y8F1X+OInmxvxfVjY0716Iu9axH4+pSQmPscDqE2G29DYv20O88Kwbhe489J6u3g8s7gNPXw2SbiNsFuieIWkCWgcz1XpuyTLzjabAqhtg586iZZM+HEIUGOIvksC3zwtICJ9QOfQDSr68EwJ0EClAyjCzksTABR8/X/wBvQEqLGmOm/t/domADqHbfCdW5pPUBIC1FRTLZ/DGwqIQHMZdvw5+Pp/jP29CVBDTTXmzuG3/gmMSBlQ8OXV1uYTkoQANdW06y78zirBEekC2oxxLEXMkHanJUD1NdXzuemAwu96j7b5JwGqrUaHT/DAa8KAwm8qnuHtrUiAdqqh+1IOvq/NdAGF77yEuXXd1AF1V6Y5tXZ0NzX0U9/vvLPAZsQCd+OlqQPqXA3NeQ1O+9pMswWFn5gtWUeAAuRcjS6gbvvaTBJQ+LYM6PvaEKCtarQBhc8MwCFjA1T/9ZmuiBF2ZSBA29Vo8RnghX9ESoCavt3tFrE9tyRAAXKuRnbWw+cGAgq6JE4ozkXvBKhaDdPsyMcL/4hkAIVf2hLreg4CVKmGymegF/4RiQDae+6WUsR4p8sToHI1bHxuCqDFhRyQKweK8ZD+tBACFCCnaiiLS/AdBV1DkgfUcjGcVADj1XBo9SRAG2VVxzZ32A/LIyR1QEF8mr7VwK4nAVqrPD8Meqm33Qv/CALUJWRDAC1v0wXei8DuhX/EmgAtVVoAiCwBxS7ACBUf0OoExk0GtEoIaUB132o4V4JaUDCg9QmMBOhZ/3YMSgH6+CRAIQJWQ7pNF3hHQe+Q9AEFFzH+Re8EKJd0hu0ctpsLxIuhkqC57FzE/sviCFCAQNWQ74IUuq8NAeqaJDhk8oDKp4BDVqdDQyYD6BDbhhCgyk1mwjdeIkAdk4SHTBxQ+SYzCBsvbRCgg+xrs/GAmi7uQPBiqCRoLrsV0bpxCAEKkK0aCp/Ds4WSBM1ltyISoJJiAaqeX0eAOhRxoJ3BNhvQ1vmfBKhDEQlQWXEAbZ+fTIDCj58NVM9NBrRz/jwBCj8+AaooBqDd6zsIUPDxIZsrEqAAmauhuf6IAIUePxusnhsLqDrGJ0B7zeqIAG0JHVAdnwQo9Piw7WkJUIAM1dDySYBCj0+AtoUMqJ5PAhR4fOD+yQQoQNpqGPgkQIHHJ0A7QgXUxOeYAF0ul00wloDHz+whwAgCVOd56zu6UQK6XEqEorkMPD4B2hUioGY+xwPocikTiuYy7PjgWyQQoAB1ytjDJwEKOX5mDwFHEKAdz/v4HAmgy1pVMFyXDxbvPc/z60eLe6/EC80zjVlaEaA6YQHay+cIAK2w9ByDXj86yE/vvbp5wh7e5y80zzRmaeVwkxkCVK/TxUI0E0JqGfv5TBxQmUnPWfzlR6/y68+Orj9/nl9+yC1qnnXN0osA1coF0GcH0v/UBeN7tFj4TBhQBc52BNyaEtDyoXmBPXuHCZCBNgrTywHQmy+PpP+rfom6Xa5GAmgXzlYE3BvRxe8dXdyrsGyeyWb1FNHlNl3UgmrFhv2LhWhEpUZBt0/gGO5vyOHEzMcmSR9/qW1Buey/88we4glOQMjIAL384EhqRcti6W5wGN0Lj4iqsczPTC2nJomblWzY6T8GJUANcp3F1+PQslj9NziM5IV7xFKepYOTwG3hjSWbtN88eVjP4h+6zOLdbnRIgJrVBrQzBvW8RUJcQ5sVTqckDr5cLMSyZ7H6yZtOp3VQpQciQGU5AMrH/TdfdXotAJ+pAOqaBM1lWxEJUKMc10H36om8oRrpAdq0nskC6nqrWAIUIH01vG8yE8fQesRZj0EJ0FjHQTNLFS6g/jvQoxu6VKdD8iwenATN5f5KON/LmAAFSFfGgB3oMQ1tselfEjSX+49PgPYIE9CQHeiVCD1foCS2ZaQEAW1/D0eAykIEtGcT0KDeuSdJuxe3rXGmCKjH3eAJUIC6ZcQCVD0nsy+Jsvy+xP+toLncd3wCtFd4gIJvgW6LWBqknaOrJxhbD5MeoN3NFglQWWiA9u7yjdKCmsB1OQwBGu04aGapwgI09C5IHUABSaYAqGa3WgJUFhKgwXdBqiM4cNBZfJtkAhQ3ZDqAht8FqV7CdErSInl8gOq2+yZAZYUDyu/AiQUo3hImShI0l43HJ0BtCgYUfgt0a4RlFXOCgGrvl0CAygoFtP8u8E5e2BbZpweo/n4eBKisZABF/hIIJQmay4bjE6B2pQKoFc8JAmq4IRIBKiuNMSjkUgwC1CGCAFVn8WE1jfE1OkoSNJe12U13lCNAZcW8XzwwBHimOwHqEEGAogEKPtN9aoAab8lJgMpaN6CxTkRCSYLmsi47AQrSegGVdjr0T4JSEm0EptFt0WZhMK0T0JgnIqEkQXO5m73nntvUgspaI6BRz/NASYLmcjc7AQrU2gBtfXO0YYD28EmAKloXoO1vjghQvyJGDdlcQLtfvG8WoH18EqCK1gIo7Jpi9xACFDdkQwH13JVhQoD28kmAKhoS0GVxvVG4F/4RSQDazycBqmhAQE1Xa7p74R9BgEY7DppZqoYD1HS5u4cX/hEpAGrhkwBVNBig3W0W/L3wjyBAox0HzSxV0QGtwSRAi+w2PglQReGA6qFTN6ZpxqAoXgyVBM3lOqPmrmdhRYwaMglAW9jpe3JpFo/hxVBJ0FyuEupuyxdWxKghowa0VLXzXL0FHUmj8neouetZfHCGOk4k60JbUMvcJ44XQyVBc7nMR4C6CwnQYb0YKgmay2U+AtRd2GPQQbwYKgmay1VCGoM6K9YsPqoXQyVBc7nOCOCTAFW07ovmkk6C5nK8IkYNIUATT4LmcrwiRg0hQBNPguZyvCJGDSFAE0+C5nK8IkYNIUATT4LmcrwiRg0hQBNPguZyvCJGDSFAE0/iYMflg8V7z/PTBdcBf4E/Za+kaxYBGs+LoZLA3bj+7Cg/vfeKP70oHp4dJG4WARrPi6GSwN24/OhVfv05bzA5qkw3Xx4lbhYBGs+LoZLA3Wha0NP3ixceVX39O0y+JpOCT7djQrF/7EkYkILPsgHNLz84arWiIdljJEmpKD0iQFGScB4v+JyoHIEWUsahAdmjJEmpKD0iQFGScC5F4/nsofQqARouAhQlSd6yEvkAAAN+SURBVNWC1r06J/bmq+edwHTqmVJReoQAKInpYrHYO6qGoJcfiiXRve4QlOQqApSUtAhQUtIiQElJiwAlJa1QQJVzIjzF5xT1SndQkrDSXD4QX/6ElsSsZMwahVuFQgHVLPW56oK7dPPkoPqW0D9JWGn4DPzyg6PQkvQoFbPG4VahQEB13+Y56tne1+zPmZ9pIf6sQ5KEleaC+/zsILAkPUrFrHG4VSoQ0OaciADxCorTgT4LcIwnCS8NK0JwSczJkzFrDG6VCgTUdE6EWxLmVv1dYUiS4NLcPHkYXhKj0jFrDG6VwpjFhw6t0FrQ0NJcP3qYIzRPvUrCrNG4lQ6gwWMZBMsvH/CPRh5VJWHWaNwKBtR0ToSTeAV5dxE0G6y6Pv/SFI6Hl8SodMwag1ulENZBg8+JQF0H9S9NdcVb1HXQNMwahVuF6JskUtIiQElJiwAlJS0ClJS0CFBS0iJASUmLACUlLQKUlLQIUKHV3cf5n35reJO9wd/v1dvDffWFq5+JTxzPZrdfdB7LN0l2EaBCDEAjg1Y4uU62Wy8cb/FPndx+8fZwu/t4Lmgl2UWACoUC2m4Sr+7POKBX91m7en7rafux2+CSDCJAhVZ3f70zm+0ycGYzxs/q3X9iDyv20myX/9zlkPL3tqtQxpd4u+SMtYz5CUPy6v6u+P/zbYG1+MGobD9SEwoWASpUtqBVN7za2S5BOmGcsjfYP/4e/7fa4TAWL7P/EYS+PeRcHm/z/5qMRWPJ87QfgeMGEgFaqgS0Akhw938vmjfYP/HeOW9XC75W7z6tPy6Y421r85oM6G77sfoEySoCVKjk8GQmtFu2b+fs+VYNKO+Uq7Eq/3EsenyhEreT2b6csa8FLdpcklUEqFAFaDkyLMeKW4/lFrQNqJgK3RJNZgno8Wxbztg3BiVAgSJAhaoufutx9b/lPOa8aUG3iiZRArQms3g4v/XvTcctzYc0s3jq4qEiQIUYThyZt4cMypJJQetqZ0u8IU+SSkAFZxWox+Ww8vzW0yYjf71c92w/0iQJKgJUqBhTboulpKJjz8W3Plv/zKhjbyjLTGULWoxQi8/z1pbBVywD1BmLHNu6xxNaZoKJAEWR63eXtFAPFQGKo85Xnf2idXqoCFAcuTWJdLIIWAQoKWkRoKSkRYCSkhYBSkpaBCgpaRGgpKRFgJKS1v8Dt0djJ4XIAdoAAAAASUVORK5CYII=" alt="Computational efficiency of softmax methods and milr approach." />
-<p class="caption">Computational efficiency of softmax methods and milr approach.</p>
-</div>
-<p>For variable selection, we apply the MILR-LASSO approach. First, the tuning parameter set is chosen automatically by setting <span class="math inline">\(\lambda = -1\)</span>, and the best <span class="math inline">\(\lambda\)</span> value is obtained by minimizing the predictive deviance with 10-fold cross validation among <code>nlambda = 100</code> candidates. In total it costs about 130 seconds to choose the optimal <span class="math inline">\(\lambda\)</span> value and there are 19 active covariates detected by the MILR-LASSO approach. Using these active covariates, the reduced MILR model performs 89.13% classification accuracy.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># MILR-LASSO</span>
-milrSV &lt;-<span class="st"> </span><span class="kw">milr</span>(MUSK1$label, X, MUSK1$bag, <span class="dt">lambda =</span> -<span class="dv">1</span>, <span class="dt">numLambda =</span> <span class="dv">100</span>, 
-               <span class="dt">lambdaCriterion =</span> <span class="st">&quot;deviance&quot;</span>, <span class="dt">maxit =</span> <span class="dv">16000</span>)
-<span class="co"># show the detected active covariates</span>
-sv_ind &lt;-<span class="st"> </span><span class="kw">names</span>(<span class="kw">which</span>(<span class="kw">coef</span>(milrSV)[-1L] !=<span class="st"> </span><span class="dv">0</span>)) %&gt;&gt;%<span class="st"> </span>
-<span class="st">  </span>(~<span class="st"> </span><span class="kw">print</span>(.)) %&gt;&gt;%<span class="st"> </span><span class="kw">match</span>(<span class="kw">colnames</span>(X))</code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1"></a>dataName &lt;-<span class="st"> &quot;MIL-Data-2002-Musk-Corel-Trec9.tgz&quot;</span></span>
+<span id="cb34-2"><a href="#cb34-2"></a>dataUrl &lt;-<span class="st"> &quot;http://www.cs.columbia.edu/~andrews/mil/data/&quot;</span></span></code></pre></div>
+<p>Here are the codes that use the <code>untar</code> function to decompress the downloaded  file and extract the <code>MUSK1</code> dataset. Then, with the following data preprocessing, we reassemble the <code>MUSK1</code> dataset in a <code>&quot;data.frame&quot;</code> format. The first 2 columns of the <code>MUSK1</code> dataset are the bag indices and the bag-level labels of each observation. Starting with the third column, there are <span class="math inline">\(p=166\)</span> covariates involved in the <code>MUSK1</code> dataset.</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1"></a>filePath &lt;-<span class="st"> </span><span class="kw">file.path</span>(<span class="kw">getwd</span>(), dataName)</span>
+<span id="cb35-2"><a href="#cb35-2"></a><span class="co"># Download MIL data sets from the url (not run)</span></span>
+<span id="cb35-3"><a href="#cb35-3"></a><span class="co"># if (!file.exists(filePath))</span></span>
+<span id="cb35-4"><a href="#cb35-4"></a><span class="co">#  download.file(paste0(dataUrl, dataName), filePath)</span></span>
+<span id="cb35-5"><a href="#cb35-5"></a><span class="co"># Extract MUSK1 data file (not run)</span></span>
+<span id="cb35-6"><a href="#cb35-6"></a><span class="co"># if (!dir.exists(&quot;MilData&quot;))</span></span>
+<span id="cb35-7"><a href="#cb35-7"></a><span class="co">#   untar(filePath, files = &quot;musk1norm.svm&quot;)</span></span>
+<span id="cb35-8"><a href="#cb35-8"></a><span class="co"># Read and Preprocess MUSK1</span></span>
+<span id="cb35-9"><a href="#cb35-9"></a><span class="kw">library</span>(data.table)</span>
+<span id="cb35-10"><a href="#cb35-10"></a>MUSK1 &lt;-<span class="st"> </span><span class="kw">fread</span>(<span class="st">&quot;musk1norm.svm&quot;</span>, <span class="dt">header =</span> <span class="ot">FALSE</span>) <span class="op">%&gt;&gt;%</span></span>
+<span id="cb35-11"><a href="#cb35-11"></a><span class="st">  `</span><span class="dt">[</span><span class="st">`</span>(<span class="dt">j =</span> <span class="kw">lapply</span>(.SD, <span class="cf">function</span>(x) <span class="kw">gsub</span>(<span class="st">&quot;</span><span class="ch">\\</span><span class="st">d+:(.*)&quot;</span>, <span class="st">&quot;</span><span class="ch">\\</span><span class="st">1&quot;</span>, x))) <span class="op">%&gt;&gt;%</span></span>
+<span id="cb35-12"><a href="#cb35-12"></a><span class="st">  `</span><span class="dt">[</span><span class="st">`</span>(<span class="dt">j =</span> <span class="kw">c</span>(<span class="st">&quot;bag&quot;</span>, <span class="st">&quot;label&quot;</span>) <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">tstrsplit</span>(V1, <span class="st">&quot;:&quot;</span>)) <span class="op">%&gt;&gt;%</span></span>
+<span id="cb35-13"><a href="#cb35-13"></a><span class="st">  `</span><span class="dt">[</span><span class="st">`</span>(<span class="dt">j =</span> <span class="dt">V1 :=</span> <span class="ot">NULL</span>) <span class="op">%&gt;&gt;%</span><span class="st"> `</span><span class="dt">[</span><span class="st">`</span>(<span class="dt">j =</span> <span class="kw">lapply</span>(.SD, as.numeric)) <span class="op">%&gt;&gt;%</span></span>
+<span id="cb35-14"><a href="#cb35-14"></a><span class="st">  `</span><span class="dt">[</span><span class="st">`</span>(<span class="dt">j =</span> <span class="st">`</span><span class="dt">:=</span><span class="st">`</span>(<span class="dt">bag =</span> bag <span class="op">+</span><span class="st"> </span><span class="dv">1</span>, <span class="dt">label =</span> (label <span class="op">+</span><span class="st"> </span><span class="dv">1</span>)<span class="op">/</span><span class="dv">2</span>)) <span class="op">%&gt;&gt;%</span></span>
+<span id="cb35-15"><a href="#cb35-15"></a><span class="st">  </span><span class="kw">setnames</span>(<span class="kw">paste0</span>(<span class="st">&quot;V&quot;</span>, <span class="dv">2</span><span class="op">:</span>(<span class="kw">ncol</span>(.)<span class="op">-</span><span class="dv">1</span>)), <span class="kw">paste0</span>(<span class="st">&quot;V&quot;</span>, <span class="dv">1</span><span class="op">:</span>(<span class="kw">ncol</span>(.)<span class="op">-</span><span class="dv">2</span>))) <span class="op">%&gt;&gt;%</span></span>
+<span id="cb35-16"><a href="#cb35-16"></a><span class="st">  `</span><span class="dt">[</span><span class="st">`</span>(<span class="dt">j =</span> <span class="kw">paste0</span>(<span class="st">&quot;V&quot;</span>, <span class="dv">1</span><span class="op">:</span>(<span class="kw">ncol</span>(.)<span class="op">-</span><span class="dv">2</span>)) <span class="op">:</span><span class="er">=</span><span class="st"> </span><span class="kw">lapply</span>(.SD, scale), </span>
+<span id="cb35-17"><a href="#cb35-17"></a>       <span class="dt">.SDcols =</span> <span class="kw">paste0</span>(<span class="st">&quot;V&quot;</span>, <span class="dv">1</span><span class="op">:</span>(<span class="kw">ncol</span>(.)<span class="op">-</span><span class="dv">2</span>)))</span>
+<span id="cb35-18"><a href="#cb35-18"></a>X &lt;-<span class="st"> </span><span class="kw">paste0</span>(<span class="st">&quot;V&quot;</span>, <span class="dv">1</span><span class="op">:</span>(<span class="kw">ncol</span>(MUSK1) <span class="op">-</span><span class="st"> </span><span class="dv">2</span>), <span class="dt">collapse =</span> <span class="st">&quot;+&quot;</span>) <span class="op">%&gt;&gt;%</span><span class="st"> </span></span>
+<span id="cb35-19"><a href="#cb35-19"></a><span class="st">  </span>(<span class="kw">paste</span>(<span class="st">&quot;~&quot;</span>, .)) <span class="op">%&gt;&gt;%</span><span class="st"> </span>as.formula <span class="op">%&gt;&gt;%</span><span class="st"> </span><span class="kw">model.matrix</span>(MUSK1) <span class="op">%&gt;&gt;%</span><span class="st"> `</span><span class="dt">[</span><span class="st">`</span>( , <span class="op">-</span>1L)</span>
+<span id="cb35-20"><a href="#cb35-20"></a>Y &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(<span class="kw">with</span>(MUSK1, <span class="kw">tapply</span>(label, bag, <span class="cf">function</span>(x) <span class="kw">sum</span>(x) <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>)))</span></code></pre></div>
+<p>To fit an MIL model without variable selection, the <strong>milr</strong> package provides two functions. The first is the <code>milr</code> function with <code>lambda = 0</code>. The second approach is the <code>softmax</code> function with a specific value of <code>alpha</code>. Here, we apply the approaches that have been introduced in <span class="citation">Xu and Frank (2004)</span> and <span class="citation">Ray and Craven (2005)</span>, called the <span class="math inline">\(s(0)\)</span> (<code>alpha=0</code>) and <span class="math inline">\(s(3)\)</span> (<code>alpha=3</code>) methods, respectively. The optimization method in <code>softmax</code> is chosen as the default settings of the generic function <code>optim</code>, that is, the  method.</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1"></a><span class="co"># softmax with alpha = 0</span></span>
+<span id="cb36-2"><a href="#cb36-2"></a>softmaxFit_<span class="dv">0</span> &lt;-<span class="st"> </span><span class="kw">softmax</span>(MUSK1<span class="op">$</span>label, X, MUSK1<span class="op">$</span>bag, <span class="dt">alpha =</span> <span class="dv">0</span>, </span>
+<span id="cb36-3"><a href="#cb36-3"></a>                        <span class="dt">control =</span> <span class="kw">list</span>(<span class="dt">maxit =</span> <span class="dv">5000</span>))</span>
+<span id="cb36-4"><a href="#cb36-4"></a><span class="co"># softmax with alpha = 3</span></span>
+<span id="cb36-5"><a href="#cb36-5"></a>softmaxFit_<span class="dv">3</span> &lt;-<span class="st"> </span><span class="kw">softmax</span>(MUSK1<span class="op">$</span>label, X, MUSK1<span class="op">$</span>bag, <span class="dt">alpha =</span> <span class="dv">3</span>, </span>
+<span id="cb36-6"><a href="#cb36-6"></a>                        <span class="dt">control =</span> <span class="kw">list</span>(<span class="dt">maxit =</span> <span class="dv">5000</span>))</span>
+<span id="cb36-7"><a href="#cb36-7"></a><span class="co"># use a very small lambda so that milr do the estimation </span></span>
+<span id="cb36-8"><a href="#cb36-8"></a><span class="co"># without evaluating the Hessian matrix</span></span>
+<span id="cb36-9"><a href="#cb36-9"></a>milrFit &lt;-<span class="st"> </span><span class="kw">milr</span>(MUSK1<span class="op">$</span>label, X, MUSK1<span class="op">$</span>bag, <span class="dt">lambda =</span> <span class="fl">1e-7</span>, <span class="dt">maxit =</span> <span class="dv">5000</span>) </span></code></pre></div>
+<p>For variable selection, we apply the MILR-LASSO approach. First, the tuning parameter set is chosen automatically by setting <span class="math inline">\(\lambda = -1\)</span>, and the best <span class="math inline">\(\lambda\)</span> value is obtained by minimizing the predictive deviance with 3-fold cross validation among <code>nlambda = 20</code> candidates.</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1"></a><span class="co"># MILR-LASSO</span></span>
+<span id="cb37-2"><a href="#cb37-2"></a>milrSV &lt;-<span class="st"> </span><span class="kw">milr</span>(MUSK1<span class="op">$</span>label, X, MUSK1<span class="op">$</span>bag, <span class="dt">lambda =</span> <span class="dv">-1</span>, <span class="dt">numLambda =</span> <span class="dv">20</span>, </span>
+<span id="cb37-3"><a href="#cb37-3"></a>               <span class="dt">nfold =</span> <span class="dv">3</span>, <span class="dt">lambdaCriterion =</span> <span class="st">&quot;deviance&quot;</span>, <span class="dt">maxit =</span> <span class="dv">5000</span>)</span>
+<span id="cb37-4"><a href="#cb37-4"></a><span class="co"># show the detected active covariates</span></span>
+<span id="cb37-5"><a href="#cb37-5"></a>sv_ind &lt;-<span class="st"> </span><span class="kw">names</span>(<span class="kw">which</span>(<span class="kw">coef</span>(milrSV)[<span class="op">-</span>1L] <span class="op">!=</span><span class="st"> </span><span class="dv">0</span>)) <span class="op">%&gt;&gt;%</span><span class="st"> </span></span>
+<span id="cb37-6"><a href="#cb37-6"></a><span class="st">  </span>(<span class="op">~</span><span class="st"> </span><span class="kw">print</span>(.)) <span class="op">%&gt;&gt;%</span><span class="st"> </span><span class="kw">match</span>(<span class="kw">colnames</span>(X))</span></code></pre></div>
 <pre><code>##  [1] &quot;V31&quot;  &quot;V36&quot;  &quot;V37&quot;  &quot;V76&quot;  &quot;V83&quot;  &quot;V105&quot; &quot;V106&quot; &quot;V108&quot; &quot;V109&quot; &quot;V116&quot;
-## [11] &quot;V118&quot; &quot;V124&quot; &quot;V126&quot; &quot;V129&quot; &quot;V132&quot; &quot;V136&quot; &quot;V147&quot; &quot;V162&quot; &quot;V163&quot;</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co"># use a very small lambda so that milr do the estimation </span>
-<span class="co"># without evaluating the Hessian matrix</span>
-milrREFit &lt;-<span class="st"> </span><span class="kw">milr</span>(MUSK1$label, X[ , sv_ind], MUSK1$bag, 
-                  <span class="dt">lambda =</span> <span class="fl">1e-7</span>, <span class="dt">maxit =</span> <span class="dv">16000</span>)
-<span class="kw">table</span>(<span class="dt">DATA =</span> Y, <span class="dt">FIT_MILR =</span> <span class="kw">fitted</span>(milrREFit, <span class="dt">type =</span> <span class="st">&quot;bag&quot;</span>))</code></pre></div>
+## [11] &quot;V118&quot; &quot;V124&quot; &quot;V126&quot; &quot;V129&quot; &quot;V136&quot; &quot;V147&quot; &quot;V162&quot; &quot;V163&quot;</code></pre>
+<div class="sourceCode" id="cb39"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1"></a><span class="co"># use a very small lambda so that milr do the estimation </span></span>
+<span id="cb39-2"><a href="#cb39-2"></a><span class="co"># without evaluating the Hessian matrix</span></span>
+<span id="cb39-3"><a href="#cb39-3"></a>milrREFit &lt;-<span class="st"> </span><span class="kw">milr</span>(MUSK1<span class="op">$</span>label, X[ , sv_ind], MUSK1<span class="op">$</span>bag, </span>
+<span id="cb39-4"><a href="#cb39-4"></a>                  <span class="dt">lambda =</span> <span class="fl">1e-7</span>, <span class="dt">maxit =</span> <span class="dv">5000</span>)</span>
+<span id="cb39-5"><a href="#cb39-5"></a><span class="co"># Confusion matrix of the fitted model</span></span>
+<span id="cb39-6"><a href="#cb39-6"></a><span class="kw">table</span>(<span class="dt">DATA =</span> Y, <span class="dt">FIT_MILR =</span> <span class="kw">fitted</span>(milrREFit, <span class="dt">type =</span> <span class="st">&quot;bag&quot;</span>))</span></code></pre></div>
 <pre><code>##     FIT_MILR
 ## DATA  0  1
 ##    0 39  6
-##    1  4 43</code></pre>
-<p>Following the discussion above, we use 10-fold cross validation and compare the prediction accuracy among four MIL models which are <span class="math inline">\(s(0)\)</span>, <span class="math inline">\(s(3)\)</span>, the MILR model with all covariates, and, the MILR model fitted by the selected covariates via MILR-LASSO. The resulting prediction accuracies are 83.70%, 77.17%, 75.00% and 81.52%, respectively.</p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">set.seed</span>(<span class="dv">99</span>)
-predY &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">0</span>, <span class="kw">length</span>(Y), 4L) %&gt;&gt;%
-<span class="st">  `</span><span class="dt">colnames&lt;-</span><span class="st">`</span>(<span class="kw">c</span>(<span class="st">&quot;s0&quot;</span>,<span class="st">&quot;s3&quot;</span>,<span class="st">&quot;milr&quot;</span>,<span class="st">&quot;milr_sv&quot;</span>))
-folds &lt;-<span class="st"> </span><span class="dv">5</span>
-foldBag &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">1</span>:folds, <span class="kw">floor</span>(<span class="kw">length</span>(Y) /<span class="st"> </span>folds) +<span class="st"> </span><span class="dv">1</span>, 
-               <span class="dt">length =</span> <span class="kw">length</span>(Y)) %&gt;&gt;%<span class="st"> </span><span class="kw">sample</span>(<span class="kw">length</span>(.))
-foldIns &lt;-<span class="st"> </span><span class="kw">rep</span>(foldBag, <span class="kw">table</span>(MUSK1$bag))
-for (i in <span class="dv">1</span>:folds) {
-  <span class="co"># prepare training and testing sets</span>
-  ind &lt;-<span class="st"> </span><span class="kw">which</span>(foldIns ==<span class="st"> </span>i)
-  <span class="co"># train models</span>
-  fit_s0 &lt;-<span class="st"> </span><span class="kw">softmax</span>(MUSK1[-ind, ]$label, X[-ind, ], MUSK1[-ind, ]$bag,
-                    <span class="dt">alpha =</span> <span class="dv">0</span>, <span class="dt">control =</span> <span class="kw">list</span>(<span class="dt">maxit =</span> <span class="dv">25000</span>))
-  fit_s3 &lt;-<span class="st"> </span><span class="kw">softmax</span>(MUSK1[-ind, ]$label, X[-ind, ], MUSK1[-ind, ]$bag,
-                    <span class="dt">alpha =</span> <span class="dv">3</span>, <span class="dt">control =</span> <span class="kw">list</span>(<span class="dt">maxit =</span> <span class="dv">25000</span>))
-  <span class="co"># milr, use a very small lambda so that milr do the estimation</span>
-  <span class="co">#       without evaluating the Hessian matrix</span>
-  fit_milr &lt;-<span class="st"> </span><span class="kw">milr</span>(MUSK1[-ind, ]$label, X[-ind, ], MUSK1[-ind, ]$bag,
-                   <span class="dt">lambda =</span> <span class="fl">1e-7</span>, <span class="dt">maxit =</span> <span class="dv">16000</span>)
-  fit_milr_sv &lt;-<span class="st"> </span><span class="kw">milr</span>(MUSK1[-ind, ]$label, X[-ind, sv_ind], MUSK1[-ind, ]$bag,
-                      <span class="dt">lambda =</span> <span class="fl">1e-7</span>, <span class="dt">maxit =</span> <span class="dv">16000</span>)
-  <span class="co"># store the predicted labels</span>
-  ind2 &lt;-<span class="st"> </span><span class="kw">which</span>(foldBag ==<span class="st"> </span>i)
-  <span class="co"># predict function returns bag response in default</span>
-  predY[ind2, 1L] &lt;-<span class="st"> </span><span class="kw">predict</span>(fit_s0, X[ind, ], MUSK1[ind, ]$bag)
-  predY[ind2, 2L] &lt;-<span class="st"> </span><span class="kw">predict</span>(fit_s3, X[ind, ], MUSK1[ind, ]$bag)
-  predY[ind2, 3L] &lt;-<span class="st"> </span><span class="kw">predict</span>(fit_milr, X[ind, ], MUSK1[ind, ]$bag)
-  predY[ind2, 4L] &lt;-<span class="st"> </span><span class="kw">predict</span>(fit_milr_sv, X[ind, sv_ind], MUSK1[ind, ]$bag)
-}
-
-<span class="kw">table</span>(<span class="dt">DATA =</span> Y, <span class="dt">PRED_s0 =</span> predY[ , 1L])</code></pre></div>
+##    1  3 44</code></pre>
+<p>We use 3-fold cross validation and compare the prediction accuracy among four MIL models which are <span class="math inline">\(s(0)\)</span>, <span class="math inline">\(s(3)\)</span>, the MILR model with all covariates, and, the MILR model fitted by the selected covariates via MILR-LASSO. Then, we show their prediction accuracy by the confusion matrices.</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1"></a><span class="kw">set.seed</span>(<span class="dv">99</span>)</span>
+<span id="cb41-2"><a href="#cb41-2"></a>predY &lt;-<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">0</span>, <span class="kw">length</span>(Y), 4L) <span class="op">%&gt;&gt;%</span></span>
+<span id="cb41-3"><a href="#cb41-3"></a><span class="st">  `</span><span class="dt">colnames&lt;-</span><span class="st">`</span>(<span class="kw">c</span>(<span class="st">&quot;s0&quot;</span>,<span class="st">&quot;s3&quot;</span>,<span class="st">&quot;milr&quot;</span>,<span class="st">&quot;milr_sv&quot;</span>))</span>
+<span id="cb41-4"><a href="#cb41-4"></a>folds &lt;-<span class="st"> </span><span class="dv">3</span></span>
+<span id="cb41-5"><a href="#cb41-5"></a>foldBag &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">1</span><span class="op">:</span>folds, <span class="kw">floor</span>(<span class="kw">length</span>(Y) <span class="op">/</span><span class="st"> </span>folds) <span class="op">+</span><span class="st"> </span><span class="dv">1</span>, </span>
+<span id="cb41-6"><a href="#cb41-6"></a>               <span class="dt">length =</span> <span class="kw">length</span>(Y)) <span class="op">%&gt;&gt;%</span><span class="st"> </span><span class="kw">sample</span>(<span class="kw">length</span>(.))</span>
+<span id="cb41-7"><a href="#cb41-7"></a>foldIns &lt;-<span class="st"> </span><span class="kw">rep</span>(foldBag, <span class="kw">table</span>(MUSK1<span class="op">$</span>bag))</span>
+<span id="cb41-8"><a href="#cb41-8"></a><span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span>folds) {</span>
+<span id="cb41-9"><a href="#cb41-9"></a>  <span class="co"># prepare training and testing sets</span></span>
+<span id="cb41-10"><a href="#cb41-10"></a>  ind &lt;-<span class="st"> </span><span class="kw">which</span>(foldIns <span class="op">==</span><span class="st"> </span>i)</span>
+<span id="cb41-11"><a href="#cb41-11"></a>  <span class="co"># train models</span></span>
+<span id="cb41-12"><a href="#cb41-12"></a>  fit_s0 &lt;-<span class="st"> </span><span class="kw">softmax</span>(MUSK1[<span class="op">-</span>ind, ]<span class="op">$</span>label, X[<span class="op">-</span>ind, ], MUSK1[<span class="op">-</span>ind, ]<span class="op">$</span>bag,</span>
+<span id="cb41-13"><a href="#cb41-13"></a>                    <span class="dt">alpha =</span> <span class="dv">0</span>, <span class="dt">control =</span> <span class="kw">list</span>(<span class="dt">maxit =</span> <span class="dv">5000</span>))</span>
+<span id="cb41-14"><a href="#cb41-14"></a>  fit_s3 &lt;-<span class="st"> </span><span class="kw">softmax</span>(MUSK1[<span class="op">-</span>ind, ]<span class="op">$</span>label, X[<span class="op">-</span>ind, ], MUSK1[<span class="op">-</span>ind, ]<span class="op">$</span>bag,</span>
+<span id="cb41-15"><a href="#cb41-15"></a>                    <span class="dt">alpha =</span> <span class="dv">3</span>, <span class="dt">control =</span> <span class="kw">list</span>(<span class="dt">maxit =</span> <span class="dv">5000</span>))</span>
+<span id="cb41-16"><a href="#cb41-16"></a>  <span class="co"># milr, use a very small lambda so that milr do the estimation</span></span>
+<span id="cb41-17"><a href="#cb41-17"></a>  <span class="co">#       without evaluating the Hessian matrix</span></span>
+<span id="cb41-18"><a href="#cb41-18"></a>  fit_milr &lt;-<span class="st"> </span><span class="kw">milr</span>(MUSK1[<span class="op">-</span>ind, ]<span class="op">$</span>label, X[<span class="op">-</span>ind, ], MUSK1[<span class="op">-</span>ind, ]<span class="op">$</span>bag,</span>
+<span id="cb41-19"><a href="#cb41-19"></a>                   <span class="dt">lambda =</span> <span class="fl">1e-7</span>, <span class="dt">maxit =</span> <span class="dv">5000</span>)</span>
+<span id="cb41-20"><a href="#cb41-20"></a>  fit_milr_sv &lt;-<span class="st"> </span><span class="kw">milr</span>(MUSK1[<span class="op">-</span>ind, ]<span class="op">$</span>label, X[<span class="op">-</span>ind, sv_ind], MUSK1[<span class="op">-</span>ind, ]<span class="op">$</span>bag,</span>
+<span id="cb41-21"><a href="#cb41-21"></a>                      <span class="dt">lambda =</span> <span class="fl">1e-7</span>, <span class="dt">maxit =</span> <span class="dv">5000</span>)</span>
+<span id="cb41-22"><a href="#cb41-22"></a>  <span class="co"># store the predicted labels</span></span>
+<span id="cb41-23"><a href="#cb41-23"></a>  ind2 &lt;-<span class="st"> </span><span class="kw">which</span>(foldBag <span class="op">==</span><span class="st"> </span>i)</span>
+<span id="cb41-24"><a href="#cb41-24"></a>  <span class="co"># predict function returns bag response in default</span></span>
+<span id="cb41-25"><a href="#cb41-25"></a>  predY[ind2, 1L] &lt;-<span class="st"> </span><span class="kw">predict</span>(fit_s0, X[ind, ], MUSK1[ind, ]<span class="op">$</span>bag)</span>
+<span id="cb41-26"><a href="#cb41-26"></a>  predY[ind2, 2L] &lt;-<span class="st"> </span><span class="kw">predict</span>(fit_s3, X[ind, ], MUSK1[ind, ]<span class="op">$</span>bag)</span>
+<span id="cb41-27"><a href="#cb41-27"></a>  predY[ind2, 3L] &lt;-<span class="st"> </span><span class="kw">predict</span>(fit_milr, X[ind, ], MUSK1[ind, ]<span class="op">$</span>bag)</span>
+<span id="cb41-28"><a href="#cb41-28"></a>  predY[ind2, 4L] &lt;-<span class="st"> </span><span class="kw">predict</span>(fit_milr_sv, X[ind, sv_ind], MUSK1[ind, ]<span class="op">$</span>bag)</span>
+<span id="cb41-29"><a href="#cb41-29"></a>}</span>
+<span id="cb41-30"><a href="#cb41-30"></a></span>
+<span id="cb41-31"><a href="#cb41-31"></a><span class="kw">table</span>(<span class="dt">DATA =</span> Y, <span class="dt">PRED_s0 =</span> predY[ , 1L])</span></code></pre></div>
 <pre><code>##     PRED_s0
 ## DATA  0  1
-##    0 37  8
-##    1 10 37</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">table</span>(<span class="dt">DATA =</span> Y, <span class="dt">PRED_s3 =</span> predY[ , 2L])</code></pre></div>
+##    0 30 15
+##    1  4 43</code></pre>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1"></a><span class="kw">table</span>(<span class="dt">DATA =</span> Y, <span class="dt">PRED_s3 =</span> predY[ , 2L])</span></code></pre></div>
 <pre><code>##     PRED_s3
 ## DATA  0  1
-##    0 27 18
-##    1  5 42</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">table</span>(<span class="dt">DATA =</span> Y, <span class="dt">PRED_MILR =</span> predY[ , 3L])</code></pre></div>
+##    0 26 19
+##    1  2 45</code></pre>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1"></a><span class="kw">table</span>(<span class="dt">DATA =</span> Y, <span class="dt">PRED_MILR =</span> predY[ , 3L])</span></code></pre></div>
 <pre><code>##     PRED_MILR
 ## DATA  0  1
-##    0 29 16
-##    1  6 41</code></pre>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">table</span>(<span class="dt">DATA =</span> Y, <span class="dt">PRED_MILR_SV =</span> predY[ , 4L])</code></pre></div>
+##    0 31 14
+##    1 10 37</code></pre>
+<div class="sourceCode" id="cb47"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1"></a><span class="kw">table</span>(<span class="dt">DATA =</span> Y, <span class="dt">PRED_MILR_SV =</span> predY[ , 4L])</span></code></pre></div>
 <pre><code>##     PRED_MILR_SV
 ## DATA  0  1
-##    0 35 10
-##    1 12 35</code></pre>
+##    0 34 11
+##    1  8 39</code></pre>
 </div>
 </div>
 <div id="summary" class="section level1">
 <h1><span class="header-section-number">5</span> Summary</h1>
-<p>This article introduces the usage of the R package <strong>milr</strong> for analyzing multiple-instance data under the framework of logistic regression. In particular, the package contains two approaches: summarizing the mean responses within each bag using the softmax function (<span class="citation">X. Xu and Frank (2004)</span>, <span class="citation">S. Ray and Craven (2005)</span>) and treating the instance-level statuses as hidden information as well as applying the EM algorithm for estimation (<span class="citation">R.-B. Chen et al. (2016)</span>). In addition, to estimate the MILR model, a lasso-type variable selection technique is incorporated into the latter approach. The limitations of the developed approaches are as follows. First, we ignore the potential dependency among instance statuses within one bag. Random effects can be incorporated into the proposed logistic regression to represent the dependency. Second, according to our preliminary simulation study, not shown in this paper, the maximum likelihood estimator might be biased when the number of instances in a bag is large, say, <span class="math inline">\(m_i=100\)</span> or more. Bias reduction methods, such as <span class="citation">Firth (1993)</span> and <span class="citation">Quenouille (1956)</span>, can be applied to alleviate this bias. These attempts are deferred to our future work.</p>
+<p>This vignette introduces the usage of the R package <strong>milr</strong> for analyzing multiple-instance data under the framework of logistic regression. In particular, the package contains two approaches: summarizing the mean responses within each bag using the softmax function (<span class="citation">Xu and Frank (2004)</span>, <span class="citation">Ray and Craven (2005)</span>) and treating the instance-level statuses as hidden information as well as applying the EM algorithm for estimation (<span class="citation">Chen et al. (2016)</span>). In addition, to estimate the MILR model, a lasso-type variable selection technique is incorporated into the latter approach. The limitations of the developed approaches are as follows. First, we ignore the potential dependency among instance statuses within one bag. Random effects can be incorporated into the proposed logistic regression to represent the dependency. Second, according to our preliminary simulation study, not shown in this paper, the maximum likelihood estimator might be biased when the number of instances in a bag is large, say, <span class="math inline">\(m_i=100\)</span> or more. Bias reduction methods, such as <span class="citation">Firth (1993)</span> and <span class="citation">Quenouille (1956)</span>, can be applied to alleviate this bias. These attempts are deferred to our future work.</p>
 </div>
 <div id="reference" class="section level1 unnumbered">
 <h1>Reference</h1>
@@ -497,22 +540,22 @@ for (i in <span class="dv">1</span>:folds) {
 <p>Andrews, Stuart, Ioannis Tsochantaridis, and Thomas Hofmann. 2003. “Support Vector Machines for Multiple-Instance Learning.” In <em>Advances in Neural Information Processing Systems 15</em>, 561–68.</p>
 </div>
 <div id="ref-milr_paper">
-<p>Chen, Ray-Bing, Kuang-Hung Cheng, Sheng-Mao Chang, Shuen-Lin Jeng, Ping-Yang Chen, Chun-Hao Yang, and Chi-Chun Hsia. 2016. “Multiple-Instance Logistic Regression with Lasso Penalty.” <em>ArXiv Preprint ArXiv:1607.03615</em>.</p>
+<p>Chen, Ray-Bing, Kuang-Hung Cheng, Sheng-Mao Chang, Shuen-Lin Jeng, Ping-Yang Chen, Chun-Hao Yang, and Chi-Chun Hsia. 2016. “Multiple-Instance Logistic Regression with Lasso Penalty.” <em>arXiv Preprint arXiv:1607.03615</em>.</p>
 </div>
 <div id="ref-dempster1977maximum">
-<p>Dempster, Arthur P, Nan M Laird, and Donald B Rubin. 1977. “Maximum Likelihood from Incomplete Data via the EM Algorithm.” <em>Journal of the Royal Statistical Society B</em> 39 (1). JSTOR: 1–38.</p>
+<p>Dempster, Arthur P, Nan M Laird, and Donald B Rubin. 1977. “Maximum Likelihood from Incomplete Data via the EM Algorithm.” <em>Journal of the Royal Statistical Society B</em> 39 (1): 1–38.</p>
 </div>
 <div id="ref-dietterich1997solving">
-<p>Dietterich, Thomas G, Richard H Lathrop, and Tomás Lozano-Pérez. 1997. “Solving the Multiple Instance Problem with Axis-Parallel Rectangles.” <em>Artificial Intelligence</em> 89 (1). Elsevier: 31–71.</p>
+<p>Dietterich, Thomas G, Richard H Lathrop, and Tomás Lozano-Pérez. 1997. “Solving the Multiple Instance Problem with Axis-Parallel Rectangles.” <em>Artificial Intelligence</em> 89 (1): 31–71.</p>
 </div>
 <div id="ref-firth1993bias">
-<p>Firth, David. 1993. “Bias Reduction of Maximum Likelihood Estimates.” <em>Biometrika</em> 80 (1). Biometrika Trust: 27–38.</p>
+<p>Firth, David. 1993. “Bias Reduction of Maximum Likelihood Estimates.” <em>Biometrika</em> 80 (1): 27–38.</p>
 </div>
 <div id="ref-friedman2010regularization">
-<p>Friedman, Jerome, Trevor Hastie, and Rob Tibshirani. 2010. “Regularization Paths for Generalized Linear Models via Coordinate Descent.” <em>Journal of Statistical Software</em> 33 (1). NIH Public Access: 1–22.</p>
+<p>Friedman, Jerome, Trevor Hastie, and Rob Tibshirani. 2010. “Regularization Paths for Generalized Linear Models via Coordinate Descent.” <em>Journal of Statistical Software</em> 33 (1): 1–22.</p>
 </div>
 <div id="ref-fu1998penalized">
-<p>Fu, Wenjiang J. 1998. “Penalized Regressions: The Bridge Versus the Lasso.” <em>Journal of Computational and Graphical Statistics</em> 7 (3). Taylor &amp; Francis: 397–416.</p>
+<p>Fu, Wenjiang J. 1998. “Penalized Regressions: The Bridge Versus the Lasso.” <em>Journal of Computational and Graphical Statistics</em> 7 (3): 397–416.</p>
 </div>
 <div id="ref-Kandemir2014image">
 <p>Kandemir, M., C. Zhang, and Hamprecht F. A. 2014. “Empowering Multiple Instance Histopathology Cancer Diagnosis by Cell Graphs.” In <em>Medical Image Computing and Computer Assisted Intervention 17 (Pt 2)</em>, 228–35.</p>
@@ -530,7 +573,7 @@ for (i in <span class="dv">1</span>:folds) {
 <p>Maron, Oded, and Aparna Lakshmi Ratan. 1998. “Multiple-Instance Learning for Natural Scene Classification.” In <em>International Conference on Machine Learning 15</em>, 341–49.</p>
 </div>
 <div id="ref-quenouille1956notes">
-<p>Quenouille, Maurice H. 1956. “Notes on Bias in Estimation.” <em>Biometrika</em> 43 (3/4). JSTOR: 353–60.</p>
+<p>Quenouille, Maurice H. 1956. “Notes on Bias in Estimation.” <em>Biometrika</em> 43 (3/4): 353–60.</p>
 </div>
 <div id="ref-ray2005supervised">
 <p>Ray, Soumya, and Mark Craven. 2005. “Supervised Versus Multiple Instance Learning: An Empirical Comparison.” In <em>International Conference on Machine Learning 22</em>, 697–704.</p>
@@ -539,19 +582,19 @@ for (i in <span class="dv">1</span>:folds) {
 <p>Settles, B., M. Craven, and S. Ray. 2008. “Multiple-Instance Active Learning.” In <em>Advances in Neural Information Processing Systems</em>, 1289–96.</p>
 </div>
 <div id="ref-MIL2016">
-<p>Tax, D. M. J., and V. Cheplygina. 2016. “MIL, a Matlab Toolbox for Multiple Instance Learning.” <a href="http://prlab.tudelft.nl/david-tax/mil.html" class="uri">http://prlab.tudelft.nl/david-tax/mil.html</a>.</p>
+<p>Tax, D. M. J., and V. Cheplygina. 2016. “MIL, a Matlab Toolbox for Multiple Instance Learning.” <a href="https://github.com/DMJTax/mil">https://github.com/DMJTax/mil</a>.</p>
 </div>
 <div id="ref-tibshirani1996regression">
-<p>Tibshirani, Robert. 1996. “Regression Shrinkage and Selection via the Lasso.” <em>Journal of the Royal Statistical Society B</em> 58 (1). JSTOR: 267–88.</p>
+<p>Tibshirani, Robert. 1996. “Regression Shrinkage and Selection via the Lasso.” <em>Journal of the Royal Statistical Society B</em> 58 (1): 267–88.</p>
 </div>
 <div id="ref-xu2004logistic">
 <p>Xu, Xin, and Eibe Frank. 2004. “Logistic Regression and Boosting for Labeled Bags of Instances.” In <em>Pacific-Asia Conference on Knowledge Discovery and Data Mining ’04</em>, 272–81.</p>
 </div>
 <div id="ref-MILL2008">
-<p>Yang, J. 2008. “MILL: A Multiple Instance Learning Library.” <a href="http://www.cs.cmu.edu/~juny/MILL/" class="uri">http://www.cs.cmu.edu/~juny/MILL/</a>.</p>
+<p>Yang, J. 2008. “MILL: A Multiple Instance Learning Library.” <a href="http://www.cs.cmu.edu/~juny/MILL/">http://www.cs.cmu.edu/~juny/MILL/</a>.</p>
 </div>
 <div id="ref-zhang2007local">
-<p>Zhang, Jianguo, Marcin Marszałek, Svetlana Lazebnik, and Cordelia Schmid. 2007. “Local Features and Kernels for Classification of Texture and Object Categories: A Comprehensive Study.” <em>International Journal of Computer Vision</em> 73 (2). Springer-Verlag: 213–38.</p>
+<p>Zhang, Jianguo, Marcin Marszałek, Svetlana Lazebnik, and Cordelia Schmid. 2007. “Local Features and Kernels for Classification of Texture and Object Categories: A Comprehensive Study.” <em>International Journal of Computer Vision</em> 73 (2): 213–38.</p>
 </div>
 <div id="ref-zhang2001dd">
 <p>Zhang, Qi, and Sally A Goldman. 2002. “EM-DD: An Improved Multiple-Instance Learning Technique.” In <em>Advances in Neural Information Processing Systems 14</em>, 1073–80.</p>
@@ -562,6 +605,9 @@ for (i in <span class="dv">1</span>:folds) {
 </div>
 </div>
 
+
+
+<!-- code folding -->
 
 
 <!-- dynamically load mathjax for compatibility with self-contained -->

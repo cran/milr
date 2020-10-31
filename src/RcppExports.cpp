@@ -8,7 +8,7 @@ using namespace Rcpp;
 
 // logit
 arma::vec logit(const arma::mat& X, const arma::vec& beta);
-RcppExport SEXP milr_logit(SEXP XSEXP, SEXP betaSEXP) {
+RcppExport SEXP _milr_logit(SEXP XSEXP, SEXP betaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -20,7 +20,7 @@ END_RCPP
 }
 // getLogLikMilr
 double getLogLikMilr(const arma::vec& beta, const arma::vec& y, const arma::mat& X, const arma::vec& bag);
-RcppExport SEXP milr_getLogLikMilr(SEXP betaSEXP, SEXP ySEXP, SEXP XSEXP, SEXP bagSEXP) {
+RcppExport SEXP _milr_getLogLikMilr(SEXP betaSEXP, SEXP ySEXP, SEXP XSEXP, SEXP bagSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -34,7 +34,7 @@ END_RCPP
 }
 // getMilrProb
 arma::vec getMilrProb(const arma::vec& beta, const arma::mat& X, const arma::vec& bag);
-RcppExport SEXP milr_getMilrProb(SEXP betaSEXP, SEXP XSEXP, SEXP bagSEXP) {
+RcppExport SEXP _milr_getMilrProb(SEXP betaSEXP, SEXP XSEXP, SEXP bagSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -47,7 +47,7 @@ END_RCPP
 }
 // getSoftmaxBag
 Rcpp::IntegerVector getSoftmaxBag(const arma::mat& X, const arma::vec& beta, const arma::vec& bag, const double& alpha);
-RcppExport SEXP milr_getSoftmaxBag(SEXP XSEXP, SEXP betaSEXP, SEXP bagSEXP, SEXP alphaSEXP) {
+RcppExport SEXP _milr_getSoftmaxBag(SEXP XSEXP, SEXP betaSEXP, SEXP bagSEXP, SEXP alphaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -61,7 +61,7 @@ END_RCPP
 }
 // milr_cpp
 arma::vec milr_cpp(const arma::vec& Z, const arma::mat& X, const arma::vec& bag, const arma::vec& init_beta, const double& lambda, const double& alpha, const double& maxit);
-RcppExport SEXP milr_milr_cpp(SEXP ZSEXP, SEXP XSEXP, SEXP bagSEXP, SEXP init_betaSEXP, SEXP lambdaSEXP, SEXP alphaSEXP, SEXP maxitSEXP) {
+RcppExport SEXP _milr_milr_cpp(SEXP ZSEXP, SEXP XSEXP, SEXP bagSEXP, SEXP init_betaSEXP, SEXP lambdaSEXP, SEXP alphaSEXP, SEXP maxitSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -78,7 +78,7 @@ END_RCPP
 }
 // softmaxlogL
 double softmaxlogL(const arma::vec& bag, const arma::mat& X, const arma::vec& Z, const arma::vec& beta, const double& alpha);
-RcppExport SEXP milr_softmaxlogL(SEXP bagSEXP, SEXP XSEXP, SEXP ZSEXP, SEXP betaSEXP, SEXP alphaSEXP) {
+RcppExport SEXP _milr_softmaxlogL(SEXP bagSEXP, SEXP XSEXP, SEXP ZSEXP, SEXP betaSEXP, SEXP alphaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -93,12 +93,12 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"milr_logit", (DL_FUNC) &milr_logit, 2},
-    {"milr_getLogLikMilr", (DL_FUNC) &milr_getLogLikMilr, 4},
-    {"milr_getMilrProb", (DL_FUNC) &milr_getMilrProb, 3},
-    {"milr_getSoftmaxBag", (DL_FUNC) &milr_getSoftmaxBag, 4},
-    {"milr_milr_cpp", (DL_FUNC) &milr_milr_cpp, 7},
-    {"milr_softmaxlogL", (DL_FUNC) &milr_softmaxlogL, 5},
+    {"_milr_logit", (DL_FUNC) &_milr_logit, 2},
+    {"_milr_getLogLikMilr", (DL_FUNC) &_milr_getLogLikMilr, 4},
+    {"_milr_getMilrProb", (DL_FUNC) &_milr_getMilrProb, 3},
+    {"_milr_getSoftmaxBag", (DL_FUNC) &_milr_getSoftmaxBag, 4},
+    {"_milr_milr_cpp", (DL_FUNC) &_milr_milr_cpp, 7},
+    {"_milr_softmaxlogL", (DL_FUNC) &_milr_softmaxlogL, 5},
     {NULL, NULL, 0}
 };
 

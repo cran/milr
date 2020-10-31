@@ -1,8 +1,8 @@
 Package: milr
 Type: Package
 Title: Multiple-Instance Logistic Regression with LASSO Penalty
-Version: 0.3.0
-Date: 2017-06-05
+Version: 0.3.1
+Date: 2020-10-28
 Description: The multiple instance data set consists of many independent
     subjects (called bags) and each subject is composed of several components
     (called instances). The outcomes of such data set are binary or categorical responses,
@@ -19,9 +19,9 @@ Authors@R: c(person("Ping-Yang", "Chen", , "pychen.ping@gmail.com", c("aut", "cr
              person("Chun-Hao", "Yang", , "chunhaoyang@ufl.edu", "aut"),
              person("Sheng-Mao", "Chang", , "smchang@mail.ncku.edu.tw", "aut"))
 Author: Ping-Yang Chen [aut, cre],
-    ChingChuan Chen [aut],
-    Chun-Hao Yang [aut],
-    Sheng-Mao Chang [aut]
+  ChingChuan Chen [aut],
+  Chun-Hao Yang [aut],
+  Sheng-Mao Chang [aut]
 URL: https://github.com/PingYangChen/milr
 BugReports: https://github.com/PingYangChen/milr/issues
 Maintainer: Ping-Yang Chen <pychen.ping@gmail.com>
@@ -29,14 +29,13 @@ Depends: R (>= 3.2.3)
 Imports: utils, pipeR (>= 0.5), numDeriv, glmnet, Rcpp (>= 0.12.0),
         RcppParallel
 LinkingTo: Rcpp, RcppArmadillo, RcppParallel
-Suggests: testthat, knitr, knitcitations, rmarkdown, data.table,
-        ggplot2, plyr
+Suggests: testthat, knitr, Hmisc, rmarkdown, data.table, ggplot2, plyr
 LazyData: yes
 SystemRequirements: GNU make
 License: MIT + file LICENSE
-RoxygenNote: 6.0.1
+RoxygenNote: 7.1.1
 VignetteBuilder: knitr
 NeedsCompilation: yes
-Packaged: 2017-06-08 16:10:13 UTC; stat
+Packaged: 2020-10-28 09:52:41 UTC; rbchen
 Repository: CRAN
-Date/Publication: 2017-06-08 16:37:15 UTC
+Date/Publication: 2020-10-31 07:30:02 UTC
