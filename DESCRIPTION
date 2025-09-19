@@ -1,8 +1,8 @@
 Package: milr
 Type: Package
 Title: Multiple-Instance Logistic Regression with LASSO Penalty
-Version: 0.3.1
-Date: 2020-10-28
+Version: 0.4.1
+Date: 2025-09-18
 Description: The multiple instance data set consists of many independent
     subjects (called bags) and each subject is composed of several components
     (called instances). The outcomes of such data set are binary or categorical responses,
@@ -30,12 +30,12 @@ Imports: utils, pipeR (>= 0.5), numDeriv, glmnet, Rcpp (>= 0.12.0),
         RcppParallel
 LinkingTo: Rcpp, RcppArmadillo, RcppParallel
 Suggests: testthat, knitr, Hmisc, rmarkdown, data.table, ggplot2, plyr
-LazyData: yes
 SystemRequirements: GNU make
 License: MIT + file LICENSE
-RoxygenNote: 7.1.1
+Encoding: UTF-8
+RoxygenNote: 7.3.2
 VignetteBuilder: knitr
 NeedsCompilation: yes
-Packaged: 2020-10-28 09:52:41 UTC; rbchen
+Packaged: 2025-09-19 02:32:28 UTC; user
 Repository: CRAN
-Date/Publication: 2020-10-31 07:30:02 UTC
+Date/Publication: 2025-09-19 02:50:02 UTC

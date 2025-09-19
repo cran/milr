@@ -1,13 +1,13 @@
 ## ----setup, include=FALSE-----------------------------------------------------
 knitr::opts_chunk$set(cache = 2, cache.lazy = FALSE, tidy = FALSE, warning = FALSE)
 
-## ---- eval=FALSE--------------------------------------------------------------
-#  milr(y, x, bag, lambda, numLambda, lambdaCriterion, nfold, maxit)
-#  softmax(y, x, bag, alpha, ...)
+## ----eval=FALSE---------------------------------------------------------------
+# milr(y, x, bag, lambda, numLambda, lambdaCriterion, nfold, maxit)
+# softmax(y, x, bag, alpha, ...)
 
-## ---- eval=FALSE--------------------------------------------------------------
-#  fitted(object, type)
-#  predict(object, newdata, bag_newdata, type)
+## ----eval=FALSE---------------------------------------------------------------
+# fitted(object, type)
+# predict(object, newdata, bag_newdata, type)
 
 ## ----DGP1---------------------------------------------------------------------
 library(milr)
